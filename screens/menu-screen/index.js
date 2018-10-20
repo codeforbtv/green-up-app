@@ -12,6 +12,8 @@ import { connect } from 'react-redux';
 import * as actions from '../login-screen/actions';
 import { defaultStyles } from '../../styles/default-styles';
 
+import { Platform } from 'react-native';
+
 const myStyles = {};
 
 const combinedStyles = Object.assign({}, defaultStyles, myStyles);
