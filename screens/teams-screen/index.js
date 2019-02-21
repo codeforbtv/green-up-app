@@ -272,7 +272,7 @@ function mapStateToProps(state) {
                 return TeamMember.memberStatuses.OWNER;
             case team :
                 return TeamMember.memberStatuses.ACCEPTED;
-            case Boolean(invitations.find(invite => invite.teamMember.uid === user.uid)) :
+            case Boolean(Object.keys(invitations).find(invite => invite.teamMember.uid === user.uid)) :
                 return TeamMember.memberStatuses.INVITED;
             default:
                 return TeamMember.memberStatuses.NOT_INVITED;
