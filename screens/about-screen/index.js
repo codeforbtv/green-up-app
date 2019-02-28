@@ -10,18 +10,28 @@ import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 
 import * as actions from './actions';
+import Anchor from '../../components/anchor'
 import {defaultStyles} from '../../styles/default-styles';
 import User from '../../models/user';
 import {removeNulls} from '../../libs/remove-nulls';
+
+
+
 
 const aboutGreenUp = 'Green Up Vermont is a nonprofit organization with 501(c) (3) status.\n\nGreen Up' +
     '’s mission is to promote the stewardship of our state’s natural landscape and wa' +
     'terways and the livability of our communities by involving people in Green Up Da' +
     'y and raising public awareness about the benefits of a litter-free environment.';
-const contactUs = 'Green Up Vermont staff:\nMelanie Phelps,\nOperations Manager / Interim President\n' +
-    '\n\nContact Us:\n\tPhone:\n\t802-229-4586\n\t800-974-3259\n\tEmail: greenu' +
-    'p@greenupvermont.org\n\n\tBy mail: Green Up Vermont\n\tP. O. Box 1191\n\tMontpel' +
-    'ier, VT 05601-1191';
+
+
+const contactUs = {
+    phoneNumber: '802-229-4586',
+    email: 'greenup@greenupvermont.org',
+    fullName: 'Green Up Vermont',
+    addressLine1: 'P. O. Box 1191',
+    addressLine2: 'Montpelier, VT 05601-1191'
+}
+
 const frequentlyAskedQuestions = [
     {
         q: 'What is Green Up Day?',
@@ -129,7 +139,11 @@ class About extends Component {
                     <View style={styles.infoBlockContainer}>
                         <Text style={styles.infoBlockHeader}>Contact Us</Text>
                         <View style={styles.infoBlock}>
-                            <Text style={[styles.textDark, {fontSize: 12}]}>{contactUs}</Text>
+                            <Anchor style={[styles.textDark, {fontSize: 12, textDecorationLine: 'underline'}]} href={"tel:" + contactUs.phoneNumber}>{contactUs.phoneNumber}</Anchor>
+                            <Anchor style={[styles.textDark, {fontSize: 12, textDecorationLine: 'underline'}]} href={"mailto:" + contactUs.email}>{contactUs.email}</Anchor>
+                            <Text style={[styles.textDark, {fontSize: 12}]}>{contactUs.fullName}</Text>
+                            <Text style={[styles.textDark, {fontSize: 12}]}>{contactUs.addressLine1}</Text>
+                            <Text style={[styles.textDark, {fontSize: 12}]}>{contactUs.addressLine2}</Text>
                         </View>
                     </View>
                     <View style={defaultStyles.padForIOSKeyboard}/>
