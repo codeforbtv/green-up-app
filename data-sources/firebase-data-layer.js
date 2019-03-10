@@ -12,7 +12,6 @@ import * as types from '../constants/actionTypes';
 import {firebaseConfig} from './firebase-config';
 import 'firebase/firestore';
 import {curry} from 'ramda';
-// import {ACCEPTED, OWNER} from '../constants/team-member-statuses';
 import * as messageTypes from '../constants/message-types';
 import TrashDrop from '../models/trash-drop';
 
@@ -22,9 +21,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Disable deprecated features
-db.settings({
-    timestampsInSnapshots: true
-});
+db.settings({});
 
 let myListeners = {};
 
@@ -102,85 +99,132 @@ function createProfile(user: User, dispatch: any => void): Promise {
 
 /** *************** INITIALIZATION *************** **/
 
+
+function fetchEventInfo(dispatch) {
+    db.collection('eventInfo').doc('eventSettings').get().then(
+        doc => {
+            if (!doc.exists) {
+                throw Error('Failed to retrieve event info');
+            }
+            dispatch({type: types.FETCH_EVENT_INFO_SUCCESS, data: doc.data()});
+
+        }).catch(
+        (error) => {
+            console.log('Error getting event info:', error);
+        }
+    );
+}
+
+
 function setupInvitedTeamMemberListener(teamId: string, dispatch: any => void): void {
     const ref = db.collection(`teams/${teamId}/invitees`);
 
     addListener(`teamMembers_${teamId}_invitees}`,
-        ref.onSnapshot(querySnapshot => {
-            const data = [];
-            querySnapshot.forEach(_doc => data.push({..._doc.data(), id: _doc.id}));
-            const invitees = data.reduce((obj, member) => ({...obj, [member.id]: member}), {});
-            dispatch(dataLayerActions.inviteesFetchSuccessful(invitees, teamId));
-        }));
+        ref.onSnapshot(
+            querySnapshot => {
+                const data = [];
+                querySnapshot.forEach(_doc => data.push({..._doc.data(), id: _doc.id}));
+                const invitees = data.reduce((obj, member) => ({...obj, [member.id]: member}), {});
+                dispatch(dataLayerActions.inviteesFetchSuccessful(invitees, teamId));
+            },
+            ((error) => {
+                console.log(error);
+                // TODO : Handle the error
+            })
+        ));
 }
 
 function setupInvitationListener(email, dispatch) {
     const ref = db.collection(`/invitations/${email}/teams`);
 
     addListener(`invitations_${email}_teams`,
-        ref.onSnapshot(querySnapshot => {
-            const data = [];
-            querySnapshot.forEach(doc => {
-                data.push(Invitation.create({...doc.data(), id: doc.id}));
-            });
-            // this should be an array not an object
-            const invitations = data.reduce((obj, team) => ({...obj, [team.id]: team}), {});
-            const messages = Object.values(data).reduce((obj, invite) => (
-                {
-                    ...obj, [invite.id]: Message.create({
-                        id: invite.id,
-                        text: `${invite.sender.displayName} has invited you to join team : ${invite.team.name}`,
-                        sender: invite.sender,
-                        teamId: invite.team.id,
-                        read: false,
-                        active: true,
-                        link: null,
-                        type: messageTypes.INVITATION,
-                        created: invite.created
-                    })
-                }
-            ), {});
-            // Add listeners for new team member list changes
-            Object.keys(invitations).forEach(key => {
-                setupInvitedTeamMemberListener(key, dispatch);
-            });
-            dispatch(dataLayerActions.messageFetchSuccessful({invitations: messages}));
-            dispatch(dataLayerActions.invitationFetchSuccessful(invitations));
-        })
+        ref.onSnapshot(
+            querySnapshot => {
+                const data = [];
+                querySnapshot.forEach(doc => {
+                    data.push(Invitation.create({...doc.data(), id: doc.id}));
+                });
+                // this should be an array not an object
+                const invitations = data.reduce((obj, team) => ({...obj, [team.id]: team}), {});
+                const messages = Object.values(data).reduce((obj, invite) => (
+                    {
+                        ...obj, [invite.id]: Message.create({
+                            id: invite.id,
+                            text: `${invite.sender.displayName} has invited you to join team : ${invite.team.name}`,
+                            sender: invite.sender,
+                            teamId: invite.team.id,
+                            read: false,
+                            active: true,
+                            link: null,
+                            type: messageTypes.INVITATION,
+                            created: invite.created
+                        })
+                    }
+                ), {});
+                // Add listeners for new team member list changes
+                // Object.keys(invitations).forEach(key => {
+                //     setupInvitedTeamMemberListener(key, dispatch);
+                // });
+                dispatch(dataLayerActions.messageFetchSuccessful({invitations: messages}));
+                dispatch(dataLayerActions.invitationFetchSuccessful(invitations));
+            },
+            ((error) => {
+                console.log(error);
+                // TODO : Handle the error
+            })
+        )
     );
 }
 
 function setupMessageListener(uid, dispatch) {
     const ref = db.collection(`messages/${uid}/messages`);
 
-    addListener(`message_${uid}_messages`, ref.onSnapshot(querySnapshot => {
-        const data = [];
-        querySnapshot.forEach(doc => data.push({...doc.data(), id: doc.id}));
-        const messages = data.reduce((obj, message) => ({...obj, [message.id]: Message.create(message)}), {});
-        dispatch(dataLayerActions.messageFetchSuccessful({[uid]: messages}));
-    }));
+    addListener(`message_${uid}_messages`, ref.onSnapshot(
+        querySnapshot => {
+            const data = [];
+            querySnapshot.forEach(doc => data.push({...doc.data(), id: doc.id}));
+            const messages = data.reduce((obj, message) => ({...obj, [message.id]: Message.create(message)}), {});
+            dispatch(dataLayerActions.messageFetchSuccessful({[uid]: messages}));
+        },
+        ((error) => {
+            console.log(error);
+            // TODO : Handle the error
+        })
+    ));
 }
 
 function setupTeamListener(dispatch) {
 
     addListener('teams', db.collection('teams')
-        .onSnapshot(querySnapshot => {
-            const data = [];
-            querySnapshot.forEach(doc => data.push({...doc.data(), id: doc.id}));
-            const teams = data.reduce((obj, team) => ({...obj, [team.id]: team}), {});
-            dispatch(dataLayerActions.teamFetchSuccessful(teams));
-        }));
+        .onSnapshot(
+            querySnapshot => {
+                const data = [];
+                querySnapshot.forEach(doc => data.push({...doc.data(), id: doc.id}));
+                const teams = data.reduce((obj, team) => ({...obj, [team.id]: team}), {});
+                dispatch(dataLayerActions.teamFetchSuccessful(teams));
+            },
+            ((error) => {
+                console.log(error);
+                // TODO : Handle the error
+            })
+        ));
 }
 
 function setupTeamMemberListener(teamIds: Array<string> = [], dispatch: any => void): void {
     return (teamIds || []).map(teamId => (
         addListener(`team_${teamId}_members`, db.collection(`teams/${teamId}/members`)
-            .onSnapshot(querySnapshot => {
-                const data = [];
-                querySnapshot.forEach(_doc => data.push({..._doc.data(), id: _doc.id}));
-                const members = data.reduce((obj, member) => ({...obj, [member.id]: member}), {});
-                dispatch(dataLayerActions.teamMemberFetchSuccessful(members, teamId));
-            }))
+            .onSnapshot(
+                querySnapshot => {
+                    const data = [];
+                    querySnapshot.forEach(_doc => data.push({..._doc.data(), id: _doc.id}));
+                    const members = data.reduce((obj, member) => ({...obj, [member.id]: member}), {});
+                    dispatch(dataLayerActions.teamMemberFetchSuccessful(members, teamId));
+                },
+                ((error) => {
+                    console.log(error);
+                    // TODO : Handle the error
+                })
+            ))
     ));
 }
 
@@ -189,12 +233,16 @@ function setupTeamMessageListener(teamIds: Array<string>, dispatch: any => any) 
         const ref = db.collection(`teams/${teamId}/messages`);
 
         addListener(`team_${teamId}_messages`, ref.onSnapshot(
-            querySnapshot => {
+            (querySnapshot => {
                 const data = [];
                 querySnapshot.forEach(doc => data.push({...doc.data(), id: doc.id}));
                 const messages = data.reduce((obj, message) => ({...obj, [message.id]: Message.create(message)}), {});
                 dispatch(dataLayerActions.messageFetchSuccessful({[teamId]: messages}));
-            }
+            }),
+            ((error) => {
+                console.log(error);
+                // TODO : Handle the error
+            })
         ));
     });
 }
@@ -233,15 +281,11 @@ function setupMyTeamsListener(user, dispatch) {
 }
 
 function setupTrashDropListener(dispatch) {
-
     addListener('trashDrops', db.collection('trashDrops').onSnapshot(querySnapshot => {
-        const data = [];
-        const ids = [];
+        const trashDrops = [];
         querySnapshot.forEach(doc => {
-            data.push(doc.data());
-            ids.push(doc.id);
+            trashDrops.push(TrashDrop.create(doc.data(), doc.id));
         });
-        const trashDrops = data.reduce((obj, drop) => ({...obj, [drop.id]: drop}), {});
         dispatch({type: types.FETCH_TRASH_DROPS_SUCCESS, trashDrops});
     }));
 }
@@ -260,6 +304,7 @@ function setupTownListener(dispatch) {
 // Initialize or de-initialize a user
 const initializeUser = curry((dispatch, user) => {
     if (Boolean(user)) {
+        fetchEventInfo(dispatch);
         setupMessageListener(user.uid, dispatch);
         setupTeamListener(dispatch);
         setupMyTeamsListener(user, dispatch);
@@ -296,7 +341,6 @@ export function createUser(email: string, password: string, displayName: string)
 }
 
 export async function facebookAuth(token) {
-
     // Build Firebase credential with the Facebook access token.
     const credential = firebase
         .auth
@@ -479,4 +523,3 @@ export function dropTrash(trashDrop: Object) {
 export function updateTrashDrop(trashDrop: Object) {
     db.collection('trashDrops').doc(trashDrop.uid).set(deconstruct({...trashDrop, location: {...trashDrop.location}}));
 }
-
