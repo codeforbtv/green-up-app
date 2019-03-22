@@ -4,8 +4,7 @@ import React, {Component} from 'react';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 import {
-    Image, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TouchableHighlight, TouchableOpacity, View, Alert,
-    Platform
+    Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableHighlight, TouchableOpacity, View
 } from 'react-native';
 import * as actions from './actions';
 import logo from '../../assets/images/green-up-logo.png';
@@ -44,8 +43,9 @@ const myStyles = {
         width: 44,
         alignSelf: 'flex-start'
     },
-    socialLogin: {flex: 1},
-
+    socialLogin: {
+        flex: 1
+    },
     socialLoginText: {
         fontSize: 16,
         fontWeight: '700',
@@ -55,7 +55,6 @@ const myStyles = {
         paddingTop: 12,
         color: 'white'
     },
-
     logos: {
         width: 20,
         height: 20
@@ -77,7 +76,12 @@ class Login extends Component<Props> {
         title: 'Log In'
     };
 
-    componentWillReceiveProps(nextProps) {
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+
+    static getDerivedStateFromProps(nextProps) {
         if (!!nextProps.loginError) {
             Alert.alert(
                 '',
@@ -90,8 +94,8 @@ class Login extends Component<Props> {
                 ],
                 {cancelable: false}
             );
-
         }
+        return null;
     }
 
 
