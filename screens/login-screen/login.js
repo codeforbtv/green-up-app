@@ -76,29 +76,6 @@ class Login extends Component<Props> {
         title: 'Log In'
     };
 
-    constructor(props) {
-        super(props);
-        this.state = {};
-    }
-
-    static getDerivedStateFromProps(nextProps) {
-        if (!!nextProps.loginError) {
-            Alert.alert(
-                '',
-                (nextProps.loginError.message || 'Login Failed'),
-                [
-                    {
-                        text: 'OK', onPress: () => {
-                        }
-                    }
-                ],
-                {cancelable: false}
-            );
-        }
-        return null;
-    }
-
-
     googleLogin = () => {
         this.props.actions.isLoggingInViaSSO(true);
         return this.props.actions.googleLogin();
@@ -116,6 +93,19 @@ class Login extends Component<Props> {
                 style={styles.frame}
                 behavior={Platform.OS === 'ios' ? 'padding' : null}
             >
+                {this.props.loginError
+                    ? Alert.alert(
+                        '',
+                        (this.props.loginError.message || 'Login Failed'),
+                        [
+                            {
+                                text: 'OK', onPress: () => {
+                                }
+                            }
+                        ],
+                        {cancelable: false}
+                    ) : null
+                }
                 <View style={styles.container}>
                     <ScrollView style={styles.scroll}>
                         <View style={{paddingLeft: 20, paddingRight: 20}}>
