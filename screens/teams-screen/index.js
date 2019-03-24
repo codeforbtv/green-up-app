@@ -5,7 +5,6 @@ import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 import {Ionicons} from '@expo/vector-icons';
 import {getMemberIcon} from '../../libs/member-icons';
-import * as constants from '../../styles/constants';
 import {
     FlatList,
     ImageBackground,
@@ -28,7 +27,7 @@ import {removeNulls} from '../../libs/remove-nulls';
 import TeamSearch from '../../components/team-search';
 
 const myStyles = {
-    butonRow: {
+    buttonRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         height: 70,
@@ -57,8 +56,16 @@ class TeamItem extends Component<{ item: Object }> {
         const item = this.props.item || {};
         return (
             <View key={item.key} style={[styles.buttonRow]}>
-                <TouchableHighlight style={[styles.button, {height: 70, marginRight: 5, padding: 10, flex: 1, alignItems:'left'}]}
-                                    onPress={item.goToTeam}>
+                <TouchableHighlight
+                    style={[styles.button, {
+                        height: 70,
+                        marginRight: 5,
+                        padding: 10,
+                        flex: 1,
+                        alignItems: 'flex-start'
+                    }]}
+                    onPress={item.goToTeam}
+                >
                     <View style={{
                         flex: 1,
                         flexDirection: 'row',
