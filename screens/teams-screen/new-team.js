@@ -50,7 +50,7 @@ const freshState = (owner, initialMapLocation = null) => ({
 });
 
 type Props = {
-    actions: Object,
+    actions: { createTeam: Object => void },
     closeModal: any,
     currentUser: User,
     eventSettings: Object,
@@ -87,7 +87,7 @@ class NewTeam extends Component<Props> {
             if (Platform.OS === 'android' && !Constants.isDevice) {
                 this.setState({
                     errorMessage: 'Oops, this will not work on Sketch in an Android emulator. Try it again on your ' +
-                    'device!'
+                        'device!'
                 });
             } else {
                 this._getLocationAsync()

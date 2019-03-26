@@ -279,7 +279,7 @@ class TeamsScreen extends Component<Props> {
                                 <FlatList
                                     data={myTeams}
                                     renderItem={({item}) => (<TeamItem item={item}/>)}
-                                    style={{paddingLeft: 10, paddingRight: 10}}
+                                    style={{paddingLeft: 10, paddingBottom: 10, paddingRight: 10}}
                                 />
                             </ScrollView>
                         )
