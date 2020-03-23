@@ -116,20 +116,22 @@ const HomeScreen = ({ actions, currentUser, navigation, myTeams, teams }: PropsT
     };
 
     // $FlowFixMe
-    const teamButtonsConfig = R.addIndex(R.reduce)((acc: Object, team: TeamType, index): Object => ({
-        ...acc,
-        [team.id]: {
-            order: 20,
-            navigation: isOwner(teams, currentUser, (team.id || "foo")) ? "TeamEditor" : "TeamDetails",
-            beforeNav: () => {
-                actions.selectTeam(team);
-            },
-            label: team.name || "My Team",
-            description:isOwner(teams, currentUser, (team.id || "foo")) ? "Manage Your Team" : "About Your Team",
-            backgroundImage: (index % 2 > 0) ? require("../../assets/images/royalton-bandstand-wide.jpg") : require("../../assets/images/man-boy-wide.jpg"),
-            backgroundImageLarge: (index % 2 > 0) ? require("../../assets/images/royalton-bandstand-large.jpg") : require("../../assets/images/man-boy-large.jpg")
-        }
-    }), {});
+    const teamButtonsConfig = R.addIndex(R.reduce)(
+        (acc: Object, team: TeamType, index): Object => ({
+                ...acc,
+                [team.id]: {
+                    order: 20,
+                    navigation: isOwner(teams, currentUser, (team.id || "foo")) ? "TeamEditor" : "TeamDetails",
+                    beforeNav: () => {
+                        actions.selectTeam(team);
+                    },
+                    label: team.name || "My Team",
+                    description:isOwner(teams, currentUser, (team.id || "foo")) ? "Manage Your Team" : "About Your Team",
+                    backgroundImage: (index % 2 > 0) ? require("../../assets/images/royalton-bandstand-wide.jpg") : require("../../assets/images/man-boy-wide.jpg"),
+                    backgroundImageLarge: (index % 2 > 0) ? require("../../assets/images/royalton-bandstand-large.jpg") : require("../../assets/images/man-boy-large.jpg")
+                }
+        }), {}
+    );
 
     // $FlowFixMe
     const myButtons = R.compose(
