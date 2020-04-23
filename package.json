@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "test": "node ./node_modules/jest/bin/jest.js --watchAll --coverage",
     "test-ci": "node ./node_modules/jest/bin/jest.js",
-    "lint": "eslint ./"
+    "lint": "eslint ./",
+    "deploy-functions": "firebase projects:list && firebase deploy --only functions"
   },
   "jest": {
     "preset": "jest-expo",
