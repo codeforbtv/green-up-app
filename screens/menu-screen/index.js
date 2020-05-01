@@ -45,9 +45,28 @@ const MenuScreen = ({ actions, navigation }: PropsType): React$Element<View> => 
                     style={ { marginRight: 10 } }
                     color={ "#555" }
                 />
-                <Text style={ { ...styles.buttonText, fontSize } }>{ "My Profile" }</Text>
+                <Text style={ { ...styles.buttonText, fontSize } }>{ "Profile" }</Text>
             </Button>
         </View>
+
+        <View style={ { margin: 20 } }>
+            <Button
+                styleName="primary"
+
+                onPress={ () => {
+                    navigation.navigate("Feedback");
+                } }
+            >
+                <Octicons
+                    name="question"
+                    size={ 30 }
+                    style={ { marginRight: 10 } }
+                    color={ "#555" }
+                />
+                <Text style={ { ...styles.buttonText, fontSize } }>{ "Feedback" }</Text>
+            </Button>
+        </View>
+
         <View style={ { margin: 20 } }>
             <Button
                 styleName="primary"
@@ -62,7 +81,7 @@ const MenuScreen = ({ actions, navigation }: PropsType): React$Element<View> => 
                     style={ { marginRight: 10 } }
                     color={ "#555" }
                 />
-                <Text style={ { ...styles.buttonText, fontSize } }>{ "Legal Stuff" }</Text>
+                <Text style={ { ...styles.buttonText, fontSize } }>{ "Legal" }</Text>
             </Button>
         </View>
         <View style={ { margin: 20 } }>

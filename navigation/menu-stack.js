@@ -5,6 +5,7 @@ import MenuScreen from "../screens/menu-screen";
 import TownsScreen from "../screens/towns-screen";
 import ProfileScreen from "../screens/profile-screen";
 import LegalScreen from "../screens/legal-screen";
+import FeedbackScreen from "../screens/feedback-screen";
 
 // $FlowFixMe
 const MenuStack = createStackNavigator({
@@ -12,7 +13,8 @@ const MenuStack = createStackNavigator({
     About: { screen: AboutScreen },
     Towns: { screen: TownsScreen },
     Profile: { screen: ProfileScreen },
-    Legal: { screen: LegalScreen }
+    Legal: { screen: LegalScreen },
+    Feedback: { screen: FeedbackScreen }
 });
 
 export default createAppContainer<any, any>(MenuStack);
