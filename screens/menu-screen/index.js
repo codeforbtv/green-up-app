@@ -99,7 +99,7 @@ const MenuScreen = ({ actions, navigation }: PropsType): React$Element<View> => 
                 <Text style={ { ...styles.buttonText, fontSize } }>{ "Log Out" }</Text>
             </Button>
         </View>
-        <View style={ { margin: 20 } }>
+        <View style={ { margin: 10 } }>
             <Text style={ { fontSize: 16, color: "#7fa54a", textAlign: "center" } }>{ `${ version }` }</Text>
             <Text style={ { fontSize: 16, color: "#7fa54a", textAlign: "center" } }>{ `${ publishDate }` }</Text>
             <Text style={ { fontSize: 16, color: "#7fa54a", textAlign: "center" } }>{ `Firebase Target: ${ firebaseConfig.projectId }` }</Text>
