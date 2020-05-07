@@ -22,6 +22,7 @@ import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import TagToggle from "../../components/tag-toggle";
 import { isInGreenUpWindow } from "../../libs/green-up-day-calucators"; // TODO: Add out of window warning
 import { findTownIdByCoordinates } from "../../libs/geo-helpers";
+import { isProductionEnv } from "../../libs/app-utils";
 
 type LocationType = { id: string, name: string, coordinates: { longitude: number, latitude: number }, error: any };
 
@@ -193,7 +194,7 @@ export const TrashDropForm = ({ teamOptions, onSave, currentUser, townData, tras
                 R.cond(
                     [
                         [
-                            () => (!(isInGreenUpWindow())),
+                            () => (!(isInGreenUpWindow()) && isProductionEnv()),
                             () => (
                                 <Fragment>
                                     <SafeAreaView style={ {
@@ -206,14 +207,8 @@ export const TrashDropForm = ({ teamOptions, onSave, currentUser, townData, tras
                                         padding: 50
 
                                     } }>
-                                        <Text style={ { color: "white", paddingBottom: 20 } }>
-                                            You cannot collect trash until the Monday before Green Up Day!
-                                        </Text>
-                                        <Text style={ { color: "white", paddingBottom: 20 } }>
-                                            We want to keep the score fair!
-                                        </Text>
                                         <Text style={ { color: "white" } }>
-                                            Check back to this screen when Green Up week starts to tag your bags!
+                                            Come back to this screen during Green Up week to record your bags!
                                         </Text>
                                     </SafeAreaView>
                                 </Fragment>
