@@ -82,6 +82,8 @@ const FreeSupplies = ({ pickupSpots, userLocation, towns }: PropsType): React$El
                                 <PickupLocation
                                     item={ item }
                                     onClick={ () => {
+                                        console.log(">>>>>> screens/free-supplies-screen/index.js");
+                                        console.log(item);
                                         setSelectedSite(item);
                                         setIsModalVisible(true);
                                     } }/>

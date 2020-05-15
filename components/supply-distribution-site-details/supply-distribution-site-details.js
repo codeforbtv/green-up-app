@@ -18,7 +18,10 @@ type PropsType = {
     towns: Object
 };
 
-export const SupplyDistributionSiteDetails = ({ site, closeModal, towns }: PropsType): React$Element<any> => (
+export const SupplyDistributionSiteDetails = ({ site, closeModal, towns }: PropsType): React$Element<any> => {
+    console.log(">> >> >> SupplyDistributionSiteDetails()");
+    console.log("notes: " + site.notes);
+    return (
     <SafeAreaView style={ styles.container }>
         <ButtonBar buttonConfigs={ [{ text: "CLOSE", onClick: closeModal }] }/>
         <ScrollView style={ styles.scroll }>
@@ -65,6 +68,6 @@ export const SupplyDistributionSiteDetails = ({ site, closeModal, towns }: Props
             </View>
         </ScrollView>
     </SafeAreaView>
-);
+)};
 
 
