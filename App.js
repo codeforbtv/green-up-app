@@ -8,6 +8,13 @@ import Session from "./components/session";
 import { Ionicons } from "@expo/vector-icons";
 import AppNavigator from "./navigation/app-navigator";
 import { YellowBox } from "react-native";
+import {decode, encode} from 'base-64'
+
+window.addEventListener = x => x;
+
+if (!global.btoa) {  global.btoa = encode }
+if (!global.atob) { global.atob = decode }
+
 
 // Stop annoying Android users with useless warnings.
 YellowBox.ignoreWarnings(["Setting a timer"]);

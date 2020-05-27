@@ -12,6 +12,7 @@ const initialState = {
         },
         contactUs: { addressLine1: "", addressLine2: "", email: "", fullName: "", phoneNumber: "" }
     },
+    faqs: { data: {}, error: null },
     loading: {
         initialAuthChecked: false,
         isInitialized: false,

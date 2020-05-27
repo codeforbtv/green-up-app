@@ -1,6 +1,7 @@
 // @flow
 import { combineReducers } from "redux";
 import { aboutReducers as about } from "./about-reducers";
+import { faqsReducers as faqs } from "./faqs-reducers";
 import { loginReducers as login } from "./login-reducers";
 import { messageReducers as messages } from "./message-reducers";
 import { reducer as network } from "react-native-offline";
@@ -17,6 +18,7 @@ import { celebrationsReducers as celebrations } from "./celebrations-reducers";
 const rootReducer = combineReducers<any, any>({
     about,
     celebrations,
+    faqs,
     session,
     login,
     messages,
