@@ -35,9 +35,8 @@ export const DisposalSiteSelector = ({ userLocation, townInfo }: PropsType): Rea
     }, [searchTerm]);
 
     return (
-        <View style={ { borderTopWidth: 2, borderColor: "white", borderStyle: "solid" } }>
+        <View>
             <SearchBar
-                help={ <TrashInfo/> }
                 searchTerm={ searchTerm }
                 search={ setSearchTerm }
                 userLocation={ userLocation }

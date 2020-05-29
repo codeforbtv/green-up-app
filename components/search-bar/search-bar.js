@@ -9,7 +9,6 @@ const localStyles = {
     searchBar: {
         margin: 10,
         padding: 0,
-        marginBottom: 2,
         height: 45
     },
     searchTerm: {
