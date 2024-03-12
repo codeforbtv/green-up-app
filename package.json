@@ -32,6 +32,9 @@
   "dependencies": {
     "@expo/samples": "3.0.3",
     "@expo/vector-icons": "^13.0.0",
+    "@firebase/app": "^0.9.28",
+    "@firebase/auth": "^1.6.1",
+    "@firebase/firestore": "^4.4.3",
     "@react-native-async-storage/async-storage": "1.18.2",
     "@react-native-community/netinfo": "9.3.10",
     "@react-native-picker/picker": "2.4.10",
@@ -62,7 +65,6 @@
     "expo-module-scripts": "^1.0.1",
     "expo-splash-screen": "~0.20.5",
     "expo-updates": "~0.18.19",
-    "firebase": "^10.8.1",
     "md5-hash": "^1.0.1",
     "moment": "^2.24.0",
     "node-gyp": "^5.0.3",
