@@ -20,4 +20,4 @@ const createFirebaseApp = (config = {}) => {
 
 export const firebaseApp = createFirebaseApp(firebaseConfig)
 export const firebaseAuth = getAuth(firebaseApp)
-export const firebaseDb = getFirestore(firebaseApp)
+export const firestore = getFirestore(firebaseApp)

@@ -1,8 +1,8 @@
 // @flow
 
-import { firebaseAuth, firebaseDb } from "../clients/firebase"
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, doc, onSnapshot } from 'firebase/firestore'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@firebase/auth';
+import { firebaseAuth, firestore } from "../clients/firebase"
+import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc } from '@firebase/firestore'
 import * as dataLayerActions from "./data-layer-actions";
 import User from "../models/user";
 import TeamMember from "../models/team-member";
@@ -21,13 +21,13 @@ import Team from "../models/team";
 import * as R from "ramda";
 import { defaultGravatar } from "../libs/avatars";
 
-firebase.initializeApp(firebaseConfig);
+// firebase.initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore through Firebase
-const db = firebase.firestore();
+// const db = getFirestore(firebaseApp)
 
 // Disable deprecated features
-db.settings({});
+// db.settings({});
 
 let myListeners = {};
 
@@ -94,23 +94,43 @@ function stringifyDates(obj: Object): Object {
 
 export function updateProfile(profile: Object, dispatch: any => any): Promise<any> {
     const newProfile = Object.assign({}, profile, { updated: (new Date()).toString() }); // TODO fix this hack right
-    const profileUpdate = db.collection("profiles").doc(profile.uid).update(newProfile);
-    return profileUpdate.catch((error: Object) => {
+    const profilesCollectionRef = collection(firestore, "profiles")
+    const userProfileDocRef =  doc(profilesCollectionRef, profile.uid)
+   
+    return updateDoc(userProfileDocRef, newProfile).catch((error: Object) => {
         dispatch(dataLayerActions.profileUpdateFail(error));
-    });
+    })
+    // const newProfile = Object.assign({}, profile, { updated: (new Date()).toString() }); // TODO fix this hack right
+    // const profileUpdate = db.collection("profiles").doc(profile.uid).update(newProfile);
+    // return profileUpdate.catch((error: Object) => {
+    //     dispatch(dataLayerActions.profileUpdateFail(error));
+    // });
 }
 
 function createProfile(user: UserType, dispatch: Dispatch<ActionType>): Promise<any> {
     const now = new Date();
     const newProfile = User.create(user);
+    const profilesCollectionRef = collection(firestore, "profiles")
+    const userProfileDocRef = doc(profilesCollectionRef, newProfile.uid)
 
-    return db.collection("profiles").doc(newProfile.uid).set({
+    return setDoc(userProfileDocRef, {
         ...newProfile,
         created: now,
         updated: now
     }).catch((error: Object) => {
         dispatch(dataLayerActions.profileCreateFail(error));
     });
+
+    // const now = new Date();
+    // const newProfile = User.create(user);
+
+    // return db.collection("profiles").doc(newProfile.uid).set({
+    //     ...newProfile,
+    //     created: now,
+    //     updated: now
+    // }).catch((error: Object) => {
+    //     dispatch(dataLayerActions.profileCreateFail(error));
+    // });
 }
 
 /** *************** INITIALIZATION *************** **/
@@ -451,19 +471,19 @@ function setupUpdatesListener(dispatch: Dispatch<ActionType>) {
 
 // Initialize or de-initialize a user
 const initializeUser = curry((dispatch: Dispatch<ActionType>, user: UserType) => {
-    setupUpdatesListener(dispatch);
+    // setupUpdatesListener(dispatch);
     // fetchEventInfo(dispatch);
-    setupProfileListener(user, dispatch);
+    // setupProfileListener(user, dispatch);
     // setupTrashDropListener(dispatch);
-    setupInvitationListener(user.email, dispatch);
+    // setupInvitationListener(user.email, dispatch);
     // setupCelebrationsListener(dispatch);
     // setupTownListener(dispatch);
     //  setupTrashCollectionSiteListener(dispatch);
     // setupSupplyDistributionSiteListener(dispatch);
     // setupTeamsListener(user, dispatch);
-    setupMessageListener(user.uid, dispatch);
-    setupMyTeamsListener(user, dispatch);
-    setupTrashDropListener(user, dispatch); // Nick added this as part of trying to get map pins on the map during offline mode.
+    // setupMessageListener(user.uid, dispatch);
+    // setupMyTeamsListener(user, dispatch);
+    // setupTrashDropListener(user, dispatch); // Nick added this as part of trying to get map pins on the map during offline mode.
     // dispatch({ type: actionTypes.IS_LOGGING_IN_VIA_SSO, isLoggingInViaSSO: false });
 });
 
@@ -477,13 +497,13 @@ const deinitializeUser = () => {
  * @returns {void}
  */
 export function initialize(dispatch: Dispatch<ActionType>) {
-    const currentUser = firebase.auth().currentUser;
+    const currentUser = firebaseAuth.currentUser;
     if (currentUser) {
         initializeUser(dispatch)(currentUser);
     }
 
-    firebase.auth().onAuthStateChanged((user: Object) => {
-        if (Boolean(user)) {
+    firebaseAuth.onAuthStateChanged((user) => {
+        if (user) {
             initializeUser(dispatch)(user);
             dispatch(dataLayerActions.userAuthenticated(User.create(user)));
         } else {
@@ -515,21 +535,37 @@ export function createUser(email: string, password: string, displayName: string,
 
 export function loginWithEmailPassword(_email: string, password: string, dispatch: Dispatch<ActionType>): Promise<any> {
     const myEmail = (_email || "").trim(); // Android adds an extra space on autofill;
-    return firebase
-        .auth()
-        .signInWithEmailAndPassword(myEmail, password)
-        .then((userInfo: { user: UserType }) => {
+    return signInWithEmailAndPassword(firebaseAuth, myEmail, password)
+        .then((userInfo) => {
             const { uid, email, displayName, photoURL } = userInfo.user;
-            db.collection("profiles").doc(uid).get().then(
-                (doc: Object) => {
-                    if (!doc.exists) {
-                        createProfile(User.create({ uid, email, displayName, photoURL }), dispatch);
-                    }
-                }).catch((error: Error) => {
+            const docRef = doc(firestore, "profiles", uid)
+
+            getDoc(docRef).then((doc) => {
+                if (!doc.exists) {
+                    createProfile(User.create({ uid, email, displayName, photoURL }), dispatch);
+                }
+            }).catch((error: Error) => {
                 // eslint-disable-next-line no-console
                 console.error("Error getting document:", error);
-            });
+            })
         });
+
+    // const myEmail = (_email || "").trim(); // Android adds an extra space on autofill;
+    // return firebase
+    //     .auth()
+    //     .signInWithEmailAndPassword(myEmail, password)
+    //     .then((userInfo: { user: UserType }) => {
+    //         const { uid, email, displayName, photoURL } = userInfo.user;
+    //         db.collection("profiles").doc(uid).get().then(
+    //             (doc: Object) => {
+    //                 if (!doc.exists) {
+    //                     createProfile(User.create({ uid, email, displayName, photoURL }), dispatch);
+    //                 }
+    //             }).catch((error: Error) => {
+    //             // eslint-disable-next-line no-console
+    //             console.error("Error getting document:", error);
+    //         });
+    //     });
 }
 
 export function resetPassword(emailAddress: string): Promise<any> {
