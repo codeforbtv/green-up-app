@@ -1,6 +1,8 @@
 // @flow
 
-import firebase from "firebase";
+import { firebaseAuth, firebaseDb } from "../clients/firebase"
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, doc, onSnapshot } from 'firebase/firestore'
 import * as dataLayerActions from "./data-layer-actions";
 import User from "../models/user";
 import TeamMember from "../models/team-member";
@@ -8,8 +10,6 @@ import Town from "../models/town";
 import Message from "../models/message";
 import Invitation from "../models/invitation";
 import * as actionTypes from "../constants/action-types";
-import { firebaseConfig } from "../firebase-config";
-import "firebase/firestore";
 import { curry } from "ramda";
 import * as messageTypes from "../constants/message-types";
 import TrashDrop from "../models/trash-drop";
