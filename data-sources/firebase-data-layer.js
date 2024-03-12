@@ -1,6 +1,13 @@
 // @flow
 
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile as updateFirebaseProfile } from '@firebase/auth';
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword, 
+    sendPasswordResetEmail,
+    updateProfile as updateProfileFirebase,
+    updateEmail as updateEmailFirebase,
+
+} from '@firebase/auth';
 import { firebaseAuth, firestore } from "../clients/firebase"
 import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc } from '@firebase/firestore'
 import * as dataLayerActions from "./data-layer-actions";
@@ -312,17 +319,31 @@ function setupTeamMessageListener(teamIds: Array<string>, dispatch: any => any) 
 
 function setupProfileListener(user: UserType, dispatch: Dispatch<ActionType>) {
     const { uid } = user;
+    const docRef = doc(firestore, `profiles/${uid}`)
+    
+    const gotSnapshot = (doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            dispatch({ type: actionTypes.FETCH_PROFILE_SUCCESS, data });
+        } else {
+            // just in case
+            createProfile(user, dispatch);
+        }
+    }
 
-    addListener(`profiles_${ uid || "" }`, db.collection("profiles").doc(uid)
-        .onSnapshot((doc: Object) => {
-            if (doc.exists) {
-                const data = doc.data();
-                dispatch({ type: actionTypes.FETCH_PROFILE_SUCCESS, data });
-            } else {
-                // just in case
-                createProfile(user, dispatch);
-            }
-        }));
+    addListener(`profiles_${ uid || "" }`, onSnapshot(docRef, { next: gotSnapshot}))
+    // const { uid } = user;
+
+    // addListener(`profiles_${ uid || "" }`, db.collection("profiles").doc(uid)
+    //     .onSnapshot((doc: Object) => {
+    //         if (doc.exists) {
+    //             const data = doc.data();
+    //             dispatch({ type: actionTypes.FETCH_PROFILE_SUCCESS, data });
+    //         } else {
+    //             // just in case
+    //             createProfile(user, dispatch);
+    //         }
+    //     }));
 }
 
 function setupMyTeamsListener(user: UserType, dispatch: Dispatch<ActionType>) {
@@ -466,14 +487,35 @@ function setupUpdatesListener(dispatch: Dispatch<ActionType>) {
             dispatch({ type: actionTypes.FETCH_UPDATES_FAIL, error });
         }, 1);
     };
-    addListener("updates", db.collection("updates").onSnapshot(gotSnapShot, snapShotError));
+    const updateCollectionRef = collection(firestore, "updates")
+    
+    addListener("updates", onSnapshot(updateCollectionRef, { next: gotSnapShot, error: snapShotError}));
+    // const gotSnapShot = (querySnapshot: QuerySnapshot) => {
+    //     const data = {};
+    //     querySnapshot.forEach((doc: Object) => {
+    //         const updated = (doc.data() || {});
+    //         data[doc.id] = (updated.updated || {}).seconds;
+    //     });
+    //     setTimeout(() => {
+    //         dispatch({ type: actionTypes.FETCH_UPDATES_SUCCESS, data });
+    //     }, 1);
+    // };
+
+    // const snapShotError = (error: Error) => {
+    //     // eslint-disable-next-line no-console
+    //     console.error("Error in setupUpdatesListener: ", error);
+    //     setTimeout(() => {
+    //         dispatch({ type: actionTypes.FETCH_UPDATES_FAIL, error });
+    //     }, 1);
+    // };
+    // addListener("updates", db.collection("updates").onSnapshot(gotSnapShot, snapShotError));
 }
 
 // Initialize or de-initialize a user
 const initializeUser = curry((dispatch: Dispatch<ActionType>, user: UserType) => {
-    // setupUpdatesListener(dispatch);
+    setupUpdatesListener(dispatch);
     // fetchEventInfo(dispatch);
-    // setupProfileListener(user, dispatch);
+    setupProfileListener(user, dispatch);
     // setupTrashDropListener(dispatch);
     // setupInvitationListener(user.email, dispatch);
     // setupCelebrationsListener(dispatch);
@@ -523,7 +565,7 @@ export function createUser(email: string, password: string, displayName: string,
                     ...User.create(response.user),
                     displayName: displayName || response.user.displayName
                 }, dispatch);
-                return updateFirebaseProfile(response.user, {
+                return updateProfileFirebase(response.user, {
                     displayName: displayName || response.user.displayName,
                     photoURL: response.user.photoURL || defaultGravatar
                 })
@@ -582,7 +624,7 @@ export function loginWithEmailPassword(_email: string, password: string, dispatc
 }
 
 export function resetPassword(emailAddress: string): Promise<any> {
-    return firebase.auth().sendPasswordResetEmail(emailAddress);
+    return sendPasswordResetEmail(firebaseAuth, emailAddress);
 }
 
 export function logout(dispatch: Dispatch<ActionType>): Promise<any> {
@@ -592,7 +634,7 @@ export function logout(dispatch: Dispatch<ActionType>): Promise<any> {
 }
 
 export function updateEmail(email: string): Promise<any> {
-    return firebase.auth().currentUser.updateEmail(email);
+    return updateEmailFirebase(firebaseAuth.currentUser, email)
 }
 
 /** *************** MESSAGING *************** **/
