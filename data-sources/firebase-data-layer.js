@@ -1,6 +1,6 @@
 // @flow
 
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile as updateFirebaseProfile } from '@firebase/auth';
 import { firebaseAuth, firestore } from "../clients/firebase"
 import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc } from '@firebase/firestore'
 import * as dataLayerActions from "./data-layer-actions";
@@ -517,20 +517,33 @@ export function initialize(dispatch: Dispatch<ActionType>) {
 
 export function createUser(email: string, password: string, displayName: string, dispatch: Dispatch<ActionType>): Promise<any> {
     const myEmail = (email || "").trim(); // Android adds an extra space on autofill;
-    return firebase
-        .auth()
-        .createUserWithEmailAndPassword(myEmail, password).then(
-            (response: Object): Promise<any> => {
+    return createUserWithEmailAndPassword(firebaseAuth, myEmail, password).then(
+            (response): Promise<any> => {
                 createProfile({
                     ...User.create(response.user),
                     displayName: displayName || response.user.displayName
                 }, dispatch);
-                return response.user.updateProfile({
+                return updateFirebaseProfile(response.user, {
                     displayName: displayName || response.user.displayName,
                     photoURL: response.user.photoURL || defaultGravatar
-                });
+                })
             }
         );
+    // const myEmail = (email || "").trim(); // Android adds an extra space on autofill;
+    // return firebase
+    //     .auth()
+    //     .createUserWithEmailAndPassword(myEmail, password).then(
+    //         (response: Object): Promise<any> => {
+    //             createProfile({
+    //                 ...User.create(response.user),
+    //                 displayName: displayName || response.user.displayName
+    //             }, dispatch);
+    //             return response.user.updateProfile({
+    //                 displayName: displayName || response.user.displayName,
+    //                 photoURL: response.user.photoURL || defaultGravatar
+    //             });
+    //         }
+    //     );
 }
 
 export function loginWithEmailPassword(_email: string, password: string, dispatch: Dispatch<ActionType>): Promise<any> {
@@ -575,7 +588,7 @@ export function resetPassword(emailAddress: string): Promise<any> {
 export function logout(dispatch: Dispatch<ActionType>): Promise<any> {
     removeAllListeners();
     dispatch(dataLayerActions.resetData());
-    return firebase.auth().signOut();
+    return firebaseAuth.signOut();
 }
 
 export function updateEmail(email: string): Promise<any> {
