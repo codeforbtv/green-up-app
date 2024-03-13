@@ -11,7 +11,6 @@ import { defaultStyles } from "../../styles/default-styles";
 import Constants from "expo-constants";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
-import * as Permissions from "expo-permissions";
 import MultiLineMapCallout from "../../components/multi-line-map-callout";
 import type Coordinates from "../../models/coordinates";
 import {bbox, centroid} from "@turf/distance";
@@ -30,7 +29,7 @@ const combinedStyles = Object.assign({}, defaultStyles, myStyles);
 
 const styles = StyleSheet.create(combinedStyles);
 
-const getLocationAsync = (): Promise<any> => Permissions.askAsync(Permissions.LOCATION)
+const getLocationAsync = (): Promise<any> => Location.requestForegroundPermissionsAsync()
     .then((locationPermission: Object): Object => {
         if (locationPermission.status !== "granted") {
             throw new Error("Allow access to location for a more accurate map");
