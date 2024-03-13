@@ -9,7 +9,7 @@ import {
 
 } from '@firebase/auth';
 import { firebaseAuth, firestore } from "../clients/firebase"
-import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc } from '@firebase/firestore'
+import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc, getDocs, query } from '@firebase/firestore'
 import * as dataLayerActions from "./data-layer-actions";
 import User from "../models/user";
 import TeamMember from "../models/team-member";
@@ -164,57 +164,105 @@ const setupInvitedTeamMemberListener = (teamIds: Array<string>, dispatch: Dispat
 });
 
 function setupInvitationListener(email: ?string = "", dispatch: Dispatch<ActionType>) {
-    const ref = db.collection(`/invitations/${ email || "" }/teams`);
+    const ref = doc(firestore, `/invitations/${ email || "" }`)
+    const teamQuery = query(collection(ref, 'teams'))
 
-    addListener(`invitations_${ email || "" }_teams`,
-        ref.onSnapshot(
-            (querySnapshot: QuerySnapshot) => {
-                const data = [];
-                querySnapshot.forEach((doc: Object) => {
-                    data.push(Invitation.create({ ...doc.data(), id: doc.id }));
-                });
-                // this should be an array not an object
-                const invitations = data.reduce(
-                    (obj: Object, team: Object): Object => ({
-                        ...obj,
-                        [team.id]: team
-                    }), {});
-                const messages = Object.values(data).reduce((obj: Object, invite: Object): Object => (
-                    {
-                        ...obj, [invite.id]: Message.create({
-                            id: invite.id,
-                            text: `${ (invite.sender || {}).displayName } has invited you to join team : ${ (invite.team || {}).name }`,
-                            sender: invite.sender,
-                            teamId: (invite.team || {}).id,
-                            read: false,
-                            active: true,
-                            link: null,
-                            type: messageTypes.INVITATION,
-                            created: invite.created
-                        })
-                    }
-                ), {});
+    const snaphostListener = onSnapshot(teamQuery,
+        (querySnapshot) => {
+            const data = [];
+           
+            querySnapshot.forEach((doc: Object) => {
+                data.push(Invitation.create({ ...doc.data(), id: doc.id }));
+            });
+            // this should be an array not an object
+            const invitations = data.reduce(
+                (obj: Object, team: Object): Object => ({
+                    ...obj,
+                    [team.id]: team
+                }), {});
+            const messages = Object.values(data).reduce((obj: Object, invite: Object): Object => (
+                {
+                    ...obj, [invite.id]: Message.create({
+                        id: invite.id,
+                        text: `${ (invite.sender || {}).displayName } has invited you to join team : ${ (invite.team || {}).name }`,
+                        sender: invite.sender,
+                        teamId: (invite.team || {}).id,
+                        read: false,
+                        active: true,
+                        link: null,
+                        type: messageTypes.INVITATION,
+                        created: invite.created
+                    })
+                }
+            ), {});
 
-                // Add listeners for new team member list changes
-                // Object.keys(invitations).forEach(key => {
-                //     setupInvitedTeamMemberListener(key, dispatch);
-                // });
-                dispatch(dataLayerActions.messageFetchSuccessful({ invitations: messages }));
-                dispatch(dataLayerActions.invitationFetchSuccessful(invitations));
-            },
-            ((error: Error) => {
-                // eslint-disable-next-line no-console
-                console.error("setupInvitationListener Error", error);
-                // TODO : Handle the error
-            })
-        )
-    );
+            // Add listeners for new team member list changes
+            // Object.keys(invitations).forEach(key => {
+            //     setupInvitedTeamMemberListener(key, dispatch);
+            // });
+            dispatch(dataLayerActions.messageFetchSuccessful({ invitations: messages }));
+            dispatch(dataLayerActions.invitationFetchSuccessful(invitations));
+        },
+        ((error: Error) => {
+            // eslint-disable-next-line no-console
+            console.error("setupInvitationListener Error", error);
+            // TODO : Handle the error
+        })
+    )
+
+    addListener(`invitations_${ email || "" }_teams`, snaphostListener);
+    // const ref = db.collection(`/invitations/${ email || "" }/teams`);
+
+    // addListener(`invitations_${ email || "" }_teams`,
+    //     ref.onSnapshot(
+    //         (querySnapshot: QuerySnapshot) => {
+    //             const data = [];
+    //             querySnapshot.forEach((doc: Object) => {
+    //                 data.push(Invitation.create({ ...doc.data(), id: doc.id }));
+    //             });
+    //             // this should be an array not an object
+    //             const invitations = data.reduce(
+    //                 (obj: Object, team: Object): Object => ({
+    //                     ...obj,
+    //                     [team.id]: team
+    //                 }), {});
+    //             const messages = Object.values(data).reduce((obj: Object, invite: Object): Object => (
+    //                 {
+    //                     ...obj, [invite.id]: Message.create({
+    //                         id: invite.id,
+    //                         text: `${ (invite.sender || {}).displayName } has invited you to join team : ${ (invite.team || {}).name }`,
+    //                         sender: invite.sender,
+    //                         teamId: (invite.team || {}).id,
+    //                         read: false,
+    //                         active: true,
+    //                         link: null,
+    //                         type: messageTypes.INVITATION,
+    //                         created: invite.created
+    //                     })
+    //                 }
+    //             ), {});
+
+    //             // Add listeners for new team member list changes
+    //             // Object.keys(invitations).forEach(key => {
+    //             //     setupInvitedTeamMemberListener(key, dispatch);
+    //             // });
+    //             dispatch(dataLayerActions.messageFetchSuccessful({ invitations: messages }));
+    //             dispatch(dataLayerActions.invitationFetchSuccessful(invitations));
+    //         },
+    //         ((error: Error) => {
+    //             // eslint-disable-next-line no-console
+    //             console.error("setupInvitationListener Error", error);
+    //             // TODO : Handle the error
+    //         })
+    //     )
+    // );
 }
 
 function setupMessageListener(uid: ?string = "", dispatch: Dispatch<ActionType>) {
-    const ref = db.collection(`messages/${ uid || "" }/messages`);
+    const ref = doc(firestore, `messages/${ uid || "" }`)
+    const messagesQuery = query(collection(ref, 'messages'))
 
-    addListener(`message_${ uid || "" }_messages`, ref.onSnapshot(
+    const messagesSnapshotListener = onSnapshot(messagesQuery,
         (querySnapshot: QuerySnapshot) => {
             const data = [];
             querySnapshot.forEach((doc: Object) => {
@@ -231,7 +279,28 @@ function setupMessageListener(uid: ?string = "", dispatch: Dispatch<ActionType>)
             console.error("setupMessageListener Error", error);
             // TODO : Handle the error
         })
-    ));
+    );
+    addListener(`message_${ uid || "" }_messages`, messagesSnapshotListener)
+    // const ref = db.collection(`messages/${ uid || "" }/messages`);
+
+    // addListener(`message_${ uid || "" }_messages`, ref.onSnapshot(
+    //     (querySnapshot: QuerySnapshot) => {
+    //         const data = [];
+    //         querySnapshot.forEach((doc: Object) => {
+    //             data.push({ ...doc.data(), id: doc.id });
+    //         });
+    //         const messages = data.reduce((obj: Object, message: MessageType): Object => ({
+    //             ...obj,
+    //             [message.id]: Message.create(message)
+    //         }), {});
+    //         dispatch(dataLayerActions.messageFetchSuccessful({ [uid || ""]: messages }));
+    //     },
+    //     ((error: Error) => {
+    //         // eslint-disable-next-line no-console
+    //         console.error("setupMessageListener Error", error);
+    //         // TODO : Handle the error
+    //     })
+    // ));
 }
 
 function setupTeamMemberListener(teamIds: Array<string> = [], dispatch: Dispatch<ActionType>) {
@@ -348,6 +417,8 @@ function setupProfileListener(user: UserType, dispatch: Dispatch<ActionType>) {
 
 function setupMyTeamsListener(user: UserType, dispatch: Dispatch<ActionType>) {
     const { uid } = user;
+    const ref = doc(firestore, `profiles/${ (uid || "") }`)
+    const teamsQuery = query(collection(ref, 'teams'))
 
     const gotSnapshot = (querySnapshot: Object) => {
         const data = [];
@@ -377,7 +448,39 @@ function setupMyTeamsListener(user: UserType, dispatch: Dispatch<ActionType>) {
         }, 1);
     };
 
-    addListener("myTeams", db.collection(`profiles/${ (uid || "") }/teams`).onSnapshot(gotSnapshot, snapShotError));
+    const myTeamsSnapshotListener = onSnapshot(teamsQuery, { next: gotSnapshot, error: snapShotError })
+    addListener("myTeams", myTeamsSnapshotListener);
+    // const { uid } = user;
+
+    // const gotSnapshot = (querySnapshot: Object) => {
+    //     const data = [];
+    //     querySnapshot.forEach((doc: Object) => {
+    //         data.push({ ...doc.data(), id: doc.id });
+    //     });
+    //     const myTeams = data.reduce((obj: Object, team: TeamType): Object => ({ ...obj, [team.id]: team }), {});
+    //     dispatch({ type: actionTypes.FETCH_MY_TEAMS_SUCCESS, data: myTeams });
+    //     const joinedTeams = data
+    //         .filter((team: TeamType): boolean => Boolean(team.id && team.isMember))
+    //         .map((team: TeamType): string => (team.id || ""));
+    //     setupTeamMessageListener(joinedTeams, dispatch);
+    //     setupTeamMemberListener(joinedTeams, dispatch);
+    //     // Add additional listeners for team owners
+    //     const ownedTeamIds = data
+    //         .filter((team: TeamType): boolean => Boolean(team.id && team.owner && team.owner.uid === uid))
+    //         .map((team: TeamType): string => (team.id || ""));
+    //     setupInvitedTeamMemberListener(ownedTeamIds, dispatch);
+    //     setupTeamRequestListener(ownedTeamIds, dispatch);
+    // };
+
+    // const snapShotError = (error: Error) => {
+    //     // eslint-disable-next-line no-console
+    //     console.error("setupMyTeamsListener error", error);
+    //     setTimeout(() => {
+    //         dispatch({ type: actionTypes.FETCH_MY_TEAMS_FAIL, error });
+    //     }, 1);
+    // };
+
+    // addListener("myTeams", db.collection(`profiles/${ (uid || "") }/teams`).onSnapshot(gotSnapshot, snapShotError));
 }
 
 // Nick added this to explore why trash drop pins did not show up on the map when they were dropped
@@ -517,14 +620,14 @@ const initializeUser = curry((dispatch: Dispatch<ActionType>, user: UserType) =>
     // fetchEventInfo(dispatch);
     setupProfileListener(user, dispatch);
     // setupTrashDropListener(dispatch);
-    // setupInvitationListener(user.email, dispatch);
+    setupInvitationListener(user.email, dispatch);
     // setupCelebrationsListener(dispatch);
     // setupTownListener(dispatch);
     //  setupTrashCollectionSiteListener(dispatch);
     // setupSupplyDistributionSiteListener(dispatch);
     // setupTeamsListener(user, dispatch);
-    // setupMessageListener(user.uid, dispatch);
-    // setupMyTeamsListener(user, dispatch);
+    setupMessageListener(user.uid, dispatch);
+    setupMyTeamsListener(user, dispatch);
     // setupTrashDropListener(user, dispatch); // Nick added this as part of trying to get map pins on the map during offline mode.
     // dispatch({ type: actionTypes.IS_LOGGING_IN_VIA_SSO, isLoggingInViaSSO: false });
 });
