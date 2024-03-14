@@ -9,7 +9,7 @@ import {
 
 } from '@firebase/auth';
 import { firebaseAuth, firestore } from "../clients/firebase"
-import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc, getDocs, query } from '@firebase/firestore'
+import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc, getDocs, query, addDoc } from '@firebase/firestore'
 import * as dataLayerActions from "./data-layer-actions";
 import User from "../models/user";
 import TeamMember from "../models/team-member";
@@ -144,9 +144,13 @@ function createProfile(user: UserType, dispatch: Dispatch<ActionType>): Promise<
 
 
 const setupInvitedTeamMemberListener = (teamIds: Array<string>, dispatch: Dispatch<ActionType>): Array<any> => (teamIds || []).map((teamId) => {
-    const ref = db.collection(`teams/${ teamId }/invitations`);
+    const teamRef = doc(firestore, `teams/${teamId}`)
+    const ref = collection(teamRef, `invitations`);
 
-    const onSnapshot = (querySnapshot: Object) => {
+    const listener = onSnapshot(ref, { next: onSnapshotz, error: onError })
+
+
+    const onSnapshotz = (querySnapshot: Object) => {
         const data = [];
         querySnapshot.forEach((_doc: Object) => {
             data.push({ ..._doc.data(), id: _doc.id });
@@ -160,7 +164,24 @@ const setupInvitedTeamMemberListener = (teamIds: Array<string>, dispatch: Dispat
         // TODO : Handle the error
     });
 
-    addListener(`teamMembers_${ teamId }_invitations}`, ref.onSnapshot(onSnapshot, onError));
+    addListener(`teamMembers_${ teamId }_invitations}`, listener);
+    // const ref = db.collection(`teams/${ teamId }/invitations`);
+
+    // const onSnapshot = (querySnapshot: Object) => {
+    //     const data = [];
+    //     querySnapshot.forEach((_doc: Object) => {
+    //         data.push({ ..._doc.data(), id: _doc.id });
+    //     });
+    //     const invitees = data.reduce((obj, member): Object => ({ ...obj, [member.id]: member }), {});
+    //     dispatch(dataLayerActions.inviteesFetchSuccessful(invitees, teamId));
+    // };
+    // const onError = ((error: Object | string) => {
+    //     // eslint-disable-next-line no-console
+    //     console.error("setupInvitedTeamMember Error: ", error);
+    //     // TODO : Handle the error
+    // });
+
+    // addListener(`teamMembers_${ teamId }_invitations}`, ref.onSnapshot(onSnapshot, onError));
 });
 
 function setupInvitationListener(email: ?string = "", dispatch: Dispatch<ActionType>) {
@@ -304,11 +325,12 @@ function setupMessageListener(uid: ?string = "", dispatch: Dispatch<ActionType>)
 }
 
 function setupTeamMemberListener(teamIds: Array<string> = [], dispatch: Dispatch<ActionType>) {
-
     const addTeamMemberListener = (teamId: string) => {
-        addListener(`team_${ teamId }_members`, db.collection(`teams/${ teamId }/members`)
-            .onSnapshot(
-                (querySnapshot: QuerySnapshot) => {
+        const teamRef = doc(firestore, `teams/${ teamId }`)
+        const membersQuery = query(collection(teamRef, 'members'))
+
+        const memberListener = onSnapshot(membersQuery,
+                (querySnapshot) => {
                     const data = [];
                     querySnapshot.forEach((_doc: Object) => {
                         data.push({ ..._doc.data(), id: _doc.id });
@@ -326,19 +348,51 @@ function setupTeamMemberListener(teamIds: Array<string> = [], dispatch: Dispatch
                     console.error("setupTeamMemberListener Error", error);
                     // TODO : Handle the error
                 })
-            ));
+        );
+        addListener(`team_${ teamId }_members`, memberListener)
     };
 
     (teamIds || []).forEach((teamId: string) => {
         addTeamMemberListener(teamId);
     });
+
+    // const addTeamMemberListener = (teamId: string) => {
+    //     addListener(`team_${ teamId }_members`, db.collection(`teams/${ teamId }/members`)
+    //         .onSnapshot(
+    //             (querySnapshot: QuerySnapshot) => {
+    //                 const data = [];
+    //                 querySnapshot.forEach((_doc: Object) => {
+    //                     data.push({ ..._doc.data(), id: _doc.id });
+    //                 });
+    //                 const members = data.reduce((obj: Object, member: TeamMemberType): Object => (
+    //                     {
+    //                         ...obj,
+    //                         [member.uid]: member
+    //                     }
+    //                 ), {});
+    //                 dispatch(dataLayerActions.teamMemberFetchSuccessful(members, teamId));
+    //             },
+    //             ((error: string | Object) => {
+    //                 // eslint-disable-next-line no-console
+    //                 console.error("setupTeamMemberListener Error", error);
+    //                 // TODO : Handle the error
+    //             })
+    //         ));
+    // };
+
+    // (teamIds || []).forEach((teamId: string) => {
+    //     addTeamMemberListener(teamId);
+    // });
 }
 
 function setupTeamRequestListener(teamIds: Array<string>, dispatch: Dispatch<ActionType>) {
-    (teamIds || []).map((teamId: string): void =>
-        addListener(`team_${ teamId }_requests`,
-            db.collection(`teams/${ teamId }/requests`).onSnapshot(
-                (querySnapshot: QuerySnapshot) => {
+    (teamIds || []).map((teamId: string): void => {
+
+        const teamRef = doc(firestore, `teams/${teamId}`)
+        const requestsQuery = query(collection(teamRef, 'requests'))
+
+        const teamRequestListener = onSnapshot(requestsQuery,
+                (querySnapshot) => {
                     const data = [];
                     querySnapshot.forEach((_doc: Object) => {
                         data.push({ ..._doc.data(), id: _doc.id });
@@ -354,17 +408,39 @@ function setupTeamRequestListener(teamIds: Array<string>, dispatch: Dispatch<Act
                     console.error("setupTeamRequestListener Error", error);
                     // TODO : Handle the error
                 })
-            )
         )
+        addListener(`team_${ teamId }_requests`, teamRequestListener)
+        // addListener(`team_${ teamId }_requests`,
+        //     db.collection(`teams/${ teamId }/requests`).onSnapshot(
+        //         (querySnapshot: QuerySnapshot) => {
+        //             const data = [];
+        //             querySnapshot.forEach((_doc: Object) => {
+        //                 data.push({ ..._doc.data(), id: _doc.id });
+        //             });
+        //             const members = data.reduce((obj: Object, member: TeamMemberType): Object => ({
+        //                 ...obj,
+        //                 [member.uid]: member
+        //             }), {});
+        //             dispatch(dataLayerActions.teamRequestFetchSuccessful(members, teamId));
+        //         },
+        //         ((error: Error) => {
+        //             // eslint-disable-next-line no-console
+        //             console.error("setupTeamRequestListener Error", error);
+        //             // TODO : Handle the error
+        //         })
+        //     )
+        // )
+    }
     );
 }
 
 function setupTeamMessageListener(teamIds: Array<string>, dispatch: any => any) {
     (teamIds || []).map((teamId: string) => {
-        const ref = db.collection(`teams/${ teamId }/messages`);
-
-        addListener(`team_${ teamId }_messages`, ref.onSnapshot(
-            ((querySnapshot: QuerySnapshot) => {
+        const teamRef = doc(firestore, `teams/${teamId}`)
+        const teamMessageQuery = query(collection(teamRef, 'messages'))
+        
+        const teamMessageListener = onSnapshot(teamMessageQuery,
+            ((querySnapshot) => {
                 const data = [];
                 querySnapshot.forEach((doc: Object) => {
                     data.push({ ...doc.data(), id: doc.id });
@@ -382,7 +458,30 @@ function setupTeamMessageListener(teamIds: Array<string>, dispatch: any => any) 
                 console.error(`setupTeamMessageListener Error for team ${ teamId }`, error);
                 // TODO : Handle the error
             })
-        ));
+        );
+        addListener(`team_${ teamId }_messages`, teamMessageListener)
+        // const ref = db.collection(`teams/${ teamId }/messages`);
+
+        // addListener(`team_${ teamId }_messages`, ref.onSnapshot(
+        //     ((querySnapshot: QuerySnapshot) => {
+        //         const data = [];
+        //         querySnapshot.forEach((doc: Object) => {
+        //             data.push({ ...doc.data(), id: doc.id });
+        //         });
+        //         const messages = data.reduce((obj: Object, message: MessageType): Object => (
+        //             {
+        //                 ...obj,
+        //                 [message.id]: Message.create(message)
+        //             }
+        //         ), {});
+        //         dispatch(dataLayerActions.messageFetchSuccessful({ [teamId]: messages }));
+        //     }),
+        //     ((error: Error) => {
+        //         // eslint-disable-next-line no-console
+        //         console.error(`setupTeamMessageListener Error for team ${ teamId }`, error);
+        //         // TODO : Handle the error
+        //     })
+        // ));
     });
 }
 
@@ -531,8 +630,11 @@ const getCollection = R.curry((Model: any, path: string, dispatchSuccessType: st
         }, 1);
     };
 
-    return db.collection(path).get().then(snapShot).catch(snapShotError);
+    console.log('hitting get collection', Model, path)
+    const collectionRef = collection(firestore, path)
+    getDocs(collectionRef).then(snapShot).catch(snapShotError)
 
+    // return db.collection(path).get().then(snapShot).catch(snapShotError);
 });
 
 // Fetch Trash Drops Data
@@ -774,15 +876,33 @@ export async function createTeam(team: Object = {}, user: ?Object = {}, dispatch
     const owner = TeamMember.create({ ...user, memberStatus: "OWNER" });
     const myTeam = deconstruct({ ...team, owner });
 
-    const docRef = await db.collection("teams").add(myTeam);
+    const collectionRef = collection(firestore, "teams");
+    const docRef = await addDoc(collectionRef, myTeam);
+
     // TODO: Refactor to single Promise.all that is returned.
     await Promise.all([
-        db.collection(`teams/${ docRef.id }/members`).doc(owner.uid).set(owner),
-        db.collection(`profiles/${ uid }/teams`).doc(docRef.id).set({ ...myTeam, isMember: true })
+        setDoc(doc(firestore, `teams/${ docRef.id }/members`, owner.uid), owner),
+        // db.collection(`teams/${ docRef.id }/members`).doc(owner.uid).set(owner),
+        setDoc(doc(firestore, `profiles/${ uid }/teams`, docRef.id), { ...myTeam, isMember: true })
+        // db.collection(`profiles/${ uid }/teams`).doc(docRef.id).set({ ...myTeam, isMember: true })
     ]);
 
     setupTeamMemberListener([docRef.id], dispatch);
     setupTeamMessageListener([docRef.id], dispatch);
+
+    // const { uid } = (user || {});
+    // const owner = TeamMember.create({ ...user, memberStatus: "OWNER" });
+    // const myTeam = deconstruct({ ...team, owner });
+
+    // const docRef = await db.collection("teams").add(myTeam);
+    // // TODO: Refactor to single Promise.all that is returned.
+    // await Promise.all([
+    //     db.collection(`teams/${ docRef.id }/members`).doc(owner.uid).set(owner),
+    //     db.collection(`profiles/${ uid }/teams`).doc(docRef.id).set({ ...myTeam, isMember: true })
+    // ]);
+
+    // setupTeamMemberListener([docRef.id], dispatch);
+    // setupTeamMessageListener([docRef.id], dispatch);
 
 }
 
