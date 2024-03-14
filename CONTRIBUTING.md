@@ -25,13 +25,17 @@ Get your own Firebase database here (https://firebase.google.com/) or, if you wa
 2) **Ensure you have `nvm` installed**: Do this by running `nvm ls`. If you see a list of `node` versions printed to your console, then you're all set. Otherwise, follow the [setup instructions](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 3) **Install Project Dependencies**:
+`.nvmrc` file should drive the correct node version to use without specifying it explicitly.
+
 ```bash
-nvm install v16.19.1
-nvm use v16.19.1
-# optional nvm alias green-up v16.19.1
-npm install --legacy-peer-deps
-npm install -g expo-cli
+nvm install
+nvm use
+# optional nvm alias green-up v18.19.1
+yarn install
+# flow
 npm install -g flow
+# or
+yarn global add flow
 ```
 
 4) **Download the Expo App**: The Green Up app is configured to be run on your physical phone inside the Expo mobile app (aka the "Expo Client"). Expo is a shell that runs the unpublished mobile app.
@@ -41,7 +45,11 @@ npm install -g flow
 5) **Start the Application**: Run the project in the root folder.
 
 ```bash
-expo-cli start
+npx expo start
+# or
+yarn start
+# or
+npm start
 ```
 
 6) **Profit!** When the giant QR code appears in the editor...
