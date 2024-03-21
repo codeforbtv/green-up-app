@@ -13,6 +13,7 @@ export default function TrashTrackerStack() {
             screenOptions={{
                 cardStyle: { backgroundColor: "transparent" },
                 cardOverlayEnabled: true,
+                presentation: 'modal',
                 cardStyleInterpolator: ({ current: { progress } }) => ({
                     cardStyle: {
                         opacity: progress.interpolate({
@@ -29,7 +30,6 @@ export default function TrashTrackerStack() {
                     }
                 })
             }}
-            mode="modal"
         >
             <Stack.Screen
                 name="TrashTracker"

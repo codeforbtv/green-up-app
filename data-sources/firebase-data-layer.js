@@ -9,7 +9,7 @@ import {
 
 } from '@firebase/auth';
 import { firebaseAuth, firestore } from "../clients/firebase"
-import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc, getDocs, query, addDoc } from '@firebase/firestore'
+import { collection, doc, onSnapshot, getDoc, updateDoc, setDoc, getDocs, query, addDoc, deleteDoc } from '@firebase/firestore'
 import * as dataLayerActions from "./data-layer-actions";
 import User from "../models/user";
 import TeamMember from "../models/team-member";
@@ -607,7 +607,11 @@ function setupTrashDropListener(user: UserType, dispatch: Dispatch<ActionType>) 
         }, 1);
     };
 
-    addListener("trashDrops", db.collection(`trashDrops`).onSnapshot(gotSnapshot, snapShotError));
+    const trashDropsQuery = query(collection(firestore, 'trashDrops'));
+    const unsubscribe = onSnapshot(trashDropsQuery, gotSnapshot, snapShotError);
+    addListener("trashDrops", unsubscribe);
+
+    // addListener("trashDrops", db.collection(`trashDrops`).onSnapshot(gotSnapshot, snapShotError));
 }
 
 const getCollection = R.curry((Model: any, path: string, dispatchSuccessType: string, dispatchErrorType: string, dispatch: Dispatch<any>) => {
@@ -655,19 +659,32 @@ export const fetchTeams = getCollection(Team)("teams")(actionTypes.FETCH_TEAMS_S
 
 // Fetch Green Up Event Info
 export function fetchEventInfo(dispatch: Dispatch<ActionType>) {
-    db.collection("eventInfo").doc("settings").get().then(
-        (doc: Object) => {
-            if (!doc.exists) {
+    getDoc(doc(firestore, "eventInfo", "settings")).then(
+        (doc) => {
+            if (!doc.exists()) {
                 throw Error("Failed to retrieve event info");
             }
             dispatch({ type: actionTypes.FETCH_EVENT_INFO_SUCCESS, data: doc.data() });
-
         }).catch(
-        (error: Object) => {
+        (error) => {
             // eslint-disable-next-line no-console
             console.error("Error getting event info:", JSON.stringify(error));
         }
     );
+
+    // db.collection("eventInfo").doc("settings").get().then(
+    //     (doc: Object) => {
+    //         if (!doc.exists) {
+    //             throw Error("Failed to retrieve event info");
+    //         }
+    //         dispatch({ type: actionTypes.FETCH_EVENT_INFO_SUCCESS, data: doc.data() });
+
+    //     }).catch(
+    //     (error: Object) => {
+    //         // eslint-disable-next-line no-console
+    //         console.error("Error getting event info:", JSON.stringify(error));
+    //     }
+    // );
 }
 
 // Fetch SupplyDistributionSite Data
@@ -730,7 +747,7 @@ const initializeUser = curry((dispatch: Dispatch<ActionType>, user: UserType) =>
     // setupTeamsListener(user, dispatch);
     setupMessageListener(user.uid, dispatch);
     setupMyTeamsListener(user, dispatch);
-    // setupTrashDropListener(user, dispatch); // Nick added this as part of trying to get map pins on the map during offline mode.
+    setupTrashDropListener(user, dispatch); // Nick added this as part of trying to get map pins on the map during offline mode.
     // dispatch({ type: actionTypes.IS_LOGGING_IN_VIA_SSO, isLoggingInViaSSO: false });
 });
 
@@ -846,7 +863,11 @@ export function updateEmail(email: string): Promise<any> {
 
 export function sendUserMessage(userId: string, message: MessageType): Promise<any> {
     const _message = deconstruct(stringifyDates(message));
-    return db.collection(`messages/${ userId }/messages`).add(_message);
+    const messagesCollection = collection(firestore, `messages/${userId}/messages`);
+    return addDoc(messagesCollection, _message);
+
+    // const _message = deconstruct(stringifyDates(message));
+    // return db.collection(`messages/${ userId }/messages`).add(_message);
 }
 
 export function sendGroupMessage(group: Array<Object>, message: MessageType): Promise<Array<mixed>> {
@@ -857,16 +878,24 @@ export function sendGroupMessage(group: Array<Object>, message: MessageType): Pr
 }
 
 export function sendTeamMessage(teamId: string, message: MessageType): Promise<any> {
-    return db.collection(`teams/${ teamId }/messages`).add(deconstruct(message));
+    const messagesCollection = collection(firestore, `teams/${teamId}/messages`);
+    return addDoc(messagesCollection, deconstruct(message));
+
+    // return db.collection(`teams/${ teamId }/messages`).add(deconstruct(message));
 }
 
 export function updateMessage(message: MessageType, userId: string): Promise<any> {
     const newMessage = deconstruct({ ...message, sender: { ...message.sender } });
-    return db.collection(`messages/${ userId }/messages`).doc(message.id).set(newMessage);
+    const messageDoc = doc(firestore, `messages/${userId}/messages`, message.id);
+    return setDoc(messageDoc, newMessage);
+    // const newMessage = deconstruct({ ...message, sender: { ...message.sender } });
+    // return db.collection(`messages/${ userId }/messages`).doc(message.id).set(newMessage);
 }
 
 export function deleteMessage(userId: string, messageId: string): Promise<any> {
-    return db.collection(`messages/${ userId }/messages`).doc(messageId).delete();
+    const messageDoc = doc(firestore, `messages/${userId}/messages`, messageId);
+    return deleteDoc(messageDoc);
+    // return db.collection(`messages/${ userId }/messages`).doc(messageId).delete();
 }
 
 /** *************** TEAMS *************** **/
@@ -908,14 +937,17 @@ export async function createTeam(team: Object = {}, user: ?Object = {}, dispatch
 
 export function saveTeam(team: TeamType): Promise<any> {
     const _team = deconstruct({ ...team, owner: { ...team.owner } });
-    return db.collection("teams").doc(team.id).set(_team);
+    return setDoc(doc(firestore, `teams/${ team.id }`, docRef.id), _team)
+    // return db.collection("teams").doc(team.id).set(_team);
 }
 
 export function deleteTeam(teamId: string): Promise<any> {
    
     let members = [];
-    const getTeamsRef = db.collection(`teams/${ teamId }/members`);
-    const getTeams = getTeamsRef.get().then(
+    const getTeamsRef = collection(db, `teams/${teamId}/members`);
+    getDocs(getTeamsRef).then(
+    // const getTeamsRef = db.collection(`teams/${ teamId }/members`);
+    // const getTeams = getTeamsRef.get().then(
         (snapshot) => {
             snapshot.forEach(
                 (doc) => {
@@ -934,11 +966,15 @@ export function deleteTeam(teamId: string): Promise<any> {
     // return new Promise(function(r) {
     //     setTimeout(() => { r('blah'); }, 2000);
     //   }); 
-    return db.collection("teams").doc(teamId).delete();
+    return deleteDoc(doc(firestore, "teams", teamId));
+    // return db.collection("teams").doc(teamId).delete();
 }
 
 export function saveLocations(locations: Object, teamId: string): Promise<any> {
-    return db.collection("teams").doc(teamId).update({ locations: deconstruct({ ...locations }) });
+    const teamDoc = doc(firestore, "teams", teamId);
+    return updateDoc(teamDoc, { locations: deconstruct({ ...locations }) });
+
+    // return db.collection("teams").doc(teamId).update({ locations: deconstruct({ ...locations }) });
 }
 
 export function inviteTeamMember(invitation: Object): Promise<any> {
@@ -947,54 +983,115 @@ export function inviteTeamMember(invitation: Object): Promise<any> {
     const sender = { ...invitation.sender };
     const teamMember = { ...invitation.teamMember };
     const invite = { ...invitation, teamMember, team, sender };
-    return db
-        .collection(`invitations/${ membershipId }/teams`)
-        .doc(team.id)
-        .set({ ...invite })
-        .then(db.collection(`teams/${ team.id }/invitations`).doc(membershipId).set(deconstruct({ ...invitation.teamMember })));
+    
+    const invitationDoc = doc(firestore, `invitations/${membershipId}/teams`, team.id);
+    const setInvitation = setDoc(invitationDoc, { ...invite });
+    
+    const teamInvitationDoc = doc(firestore, `teams/${team.id}/invitations`, membershipId);
+    const setTeamInvitation = setDoc(teamInvitationDoc, deconstruct({ ...invitation.teamMember }));
+    
+    return Promise.all([setInvitation, setTeamInvitation]);
+
+    // const membershipId = invitation.teamMember.email.toLowerCase();
+    // const team = { ...invitation.team, owner: { ...invitation.team.owner } };
+    // const sender = { ...invitation.sender };
+    // const teamMember = { ...invitation.teamMember };
+    // const invite = { ...invitation, teamMember, team, sender };
+    // return db
+    //     .collection(`invitations/${ membershipId }/teams`)
+    //     .doc(team.id)
+    //     .set({ ...invite })
+    //     .then(db.collection(`teams/${ team.id }/invitations`).doc(membershipId).set(deconstruct({ ...invitation.teamMember })));
 }
 
 export function removeInvitation(teamId: string, email: string): Promise<any> {
-    const deleteInvitation = db.collection(`invitations/${ email }/teams`).doc(teamId).delete();
-    const deleteTeamRecord = db.collection(`teams/${ teamId }/invitations`).doc(email.toLowerCase().trim()).delete();
+    const emailLower = email.toLowerCase().trim();
+    const deleteInvitation = deleteDoc(doc(firestore, `invitations/${emailLower}/teams`, teamId));
+    const deleteTeamRecord = deleteDoc(doc(firestore, `teams/${teamId}/invitations`, emailLower));
     return Promise.all([deleteInvitation, deleteTeamRecord]);
+
+    // const deleteInvitation = db.collection(`invitations/${ email }/teams`).doc(teamId).delete();
+    // const deleteTeamRecord = db.collection(`teams/${ teamId }/invitations`).doc(email.toLowerCase().trim()).delete();
+    // return Promise.all([deleteInvitation, deleteTeamRecord]);
 }
 
 export async function addTeamMember(teamId: string, user: Object, status: string = "ACCEPTED", dispatch: Dispatch<ActionType>): Promise<any> {
-    const collRef = db.collection('teams'); 
-    const myteamRef = collRef.doc(teamId);
-    let myteam = null;
     const email = user.email.toLowerCase().trim();
     const teamMember = TeamMember.create(Object.assign({}, user, { memberStatus: status }));
-    const addToTeam = await db.collection(`teams/${ teamId }/members`).doc(teamMember.uid).set(teamMember).then(
+
+    const teamMemberDoc = doc(firestore, `teams/${teamId}/members`, teamMember.uid);
+    const addToTeam = setDoc(teamMemberDoc, teamMember).then(
         (val) => {
             console.log("value: " + val);
         }
     ).catch((error) => {
         console.log("Error adding team member:", error);
     });
-    const getTeam = await myteamRef.get().then(
+
+    const myteamRef = doc(firestore, 'teams', teamId);
+    let myteam = null;
+    const getTeam = getDoc(myteamRef).then(
         (doc) => {
-            if (doc.exists) {
-                    console.log("Document data:", doc.data());
-                    myteam = doc.data();
-                    
+            if (doc.exists()) {
+                console.log("Document data:", doc.data());
+                myteam = doc.data();
             } else {
-                // doc.data() will be undefined in this case
+// doc.data() will be undefined in this case
                 console.log("No such document!");
             }
         }
     ).catch((error) => {
         console.log("Error getting document:", error);
     });
-    const removeRequest = db.collection(`teams/${ teamId }/requests`).doc(teamMember.uid).delete();
-    const addTeamToProfile = db.collection(`profiles/${ user.uid }/teams`).doc(teamId).set({ ...myteam, isMember: true });
+
+    const removeRequestDoc = doc(firestore, `teams/${teamId}/requests`, teamMember.uid);
+    const removeRequest = deleteDoc(removeRequestDoc);
+
+    const profileDoc = doc(firestore, `profiles/${user.uid}/teams`, teamId);
+    const addTeamToProfile = setDoc(profileDoc, { ...myteam, isMember: true });
+
     const results = await Promise.all([addTeamToProfile, removeRequest]).then((): Promise<any> => removeInvitation(teamId, email));
+
     if (dispatch) { // If dispatch is defined we are adding current user and need to setup listeners. TODO: Fix this hack.
         setupTeamMemberListener([teamId], dispatch);
         setupTeamMessageListener([teamId], dispatch);
     }
+
     return results;
+    // const collRef = db.collection('teams'); 
+    // const myteamRef = collRef.doc(teamId);
+    // let myteam = null;
+    // const email = user.email.toLowerCase().trim();
+    // const teamMember = TeamMember.create(Object.assign({}, user, { memberStatus: status }));
+    // const addToTeam = await db.collection(`teams/${ teamId }/members`).doc(teamMember.uid).set(teamMember).then(
+    //     (val) => {
+    //         console.log("value: " + val);
+    //     }
+    // ).catch((error) => {
+    //     console.log("Error adding team member:", error);
+    // });
+    // const getTeam = await myteamRef.get().then(
+    //     (doc) => {
+    //         if (doc.exists) {
+    //                 console.log("Document data:", doc.data());
+    //                 myteam = doc.data();
+                    
+    //         } else {
+    //             // doc.data() will be undefined in this case
+    //             console.log("No such document!");
+    //         }
+    //     }
+    // ).catch((error) => {
+    //     console.log("Error getting document:", error);
+    // });
+    // const removeRequest = db.collection(`teams/${ teamId }/requests`).doc(teamMember.uid).delete();
+    // const addTeamToProfile = db.collection(`profiles/${ user.uid }/teams`).doc(teamId).set({ ...myteam, isMember: true });
+    // const results = await Promise.all([addTeamToProfile, removeRequest]).then((): Promise<any> => removeInvitation(teamId, email));
+    // if (dispatch) { // If dispatch is defined we are adding current user and need to setup listeners. TODO: Fix this hack.
+    //     setupTeamMemberListener([teamId], dispatch);
+    //     setupTeamMessageListener([teamId], dispatch);
+    // }
+    // return results;
 }
 
 export function updateTeamMember(teamId: string, teamMember: TeamMemberType): Promise<any> {
@@ -1014,32 +1111,60 @@ export function removeTeamMember(teamId: string, teamMember: UserType): Promise<
 export function leaveTeam(teamId: string, teamMember: UserType): Promise<any> {
     const teams = { ...teamMember.teams };
     delete teams[teamId];
-    const removeMember = db.collection(`teams/${ teamId }/members`).doc(teamMember.uid).delete();
-    const removeTeam = db.collection(`profiles/${ teamMember.uid || "" }/teams`).doc(teamId).delete();
+    const memberDoc = doc(firestore, `teams/${teamId}/members`, teamMember.uid);
+    const removeMember = deleteDoc(memberDoc);
+    const teamDoc = doc(firestore, `profiles/${teamMember.uid || ""}/teams`, teamId);
+    const removeTeam = deleteDoc(teamDoc);
     return Promise.all([removeMember, removeTeam]);
+
+    // const teams = { ...teamMember.teams };
+    // delete teams[teamId];
+    // const removeMember = db.collection(`teams/${ teamId }/members`).doc(teamMember.uid).delete();
+    // const removeTeam = db.collection(`profiles/${ teamMember.uid || "" }/teams`).doc(teamId).delete();
+    // return Promise.all([removeMember, removeTeam]);
 }
 
 export function revokeInvitation(teamId: string, membershipId: string): Promise<any> {
     const _membershipId = membershipId.toLowerCase();
-    const teamListing = db.collection(`teams/${ teamId }/invitations`).doc(_membershipId).delete();
-    const invite = db.collection(`invitations/${ _membershipId }/teams`).doc(teamId).delete();
+    const teamListing = deleteDoc(doc(firestore, `teams/${teamId}/invitations`, _membershipId));
+    const invite = deleteDoc(doc(firestore, `invitations/${_membershipId}/teams`, teamId));
     return Promise.all([teamListing, invite]);
+    // const _membershipId = membershipId.toLowerCase();
+    // const teamListing = db.collection(`teams/${ teamId }/invitations`).doc(_membershipId).delete();
+    // const invite = db.collection(`invitations/${ _membershipId }/teams`).doc(teamId).delete();
+    // return Promise.all([teamListing, invite]);
 }
 
 export function addTeamRequest(teamId: string, user: Object): Promise<any> {
     const email = user.email.toLowerCase().trim();
     const teamMember = TeamMember.create(Object.assign({}, user, { memberStatus: teamStatuses.REQUEST_TO_JOIN }));
-    const teamRequest = db.collection(`teams/${ teamId }/requests`).doc(user.uid).set(deconstruct(teamMember));
-    const addTeamToProfile = db.collection(`profiles/${ user.uid }/teams`).doc(teamId).set({ isMember: false });
+    const teamRequestDoc = doc(firestore, `teams/${teamId}/requests`, user.uid);
+    const teamRequest = setDoc(teamRequestDoc, deconstruct(teamMember));
+    const profileDoc = doc(firestore, `profiles/${user.uid}/teams`, teamId);
+    const addTeamToProfile = setDoc(profileDoc, { isMember: false });
     return Promise.all([teamRequest, addTeamToProfile]).then((): Promise<any> => removeInvitation(teamId, email));
+
+    // const email = user.email.toLowerCase().trim();
+    // const teamMember = TeamMember.create(Object.assign({}, user, { memberStatus: teamStatuses.REQUEST_TO_JOIN }));
+    // const teamRequest = db.collection(`teams/${ teamId }/requests`).doc(user.uid).set(deconstruct(teamMember));
+    // const addTeamToProfile = db.collection(`profiles/${ user.uid }/teams`).doc(teamId).set({ isMember: false });
+    // return Promise.all([teamRequest, addTeamToProfile]).then((): Promise<any> => removeInvitation(teamId, email));
 }
 
 export function removeTeamRequest(teamId: string, teamMember: UserType): Promise<any> {
     const teams = { ...teamMember.teams };
     delete teams[teamId];
-    const delRequest = db.collection(`teams/${ teamId }/requests`).doc(teamMember.uid).delete();
-    const delFromProfile = db.collection(`profiles/${ teamMember.uid || "" }/teams/`).doc(teamId).delete();
+    const teamRequestDoc = doc(firestore, `teams/${teamId}/requests`, teamMember.uid);
+    const delRequest = deleteDoc(teamRequestDoc);
+    const profileDoc = doc(firestore, `profiles/${teamMember.uid || ""}/teams`, teamId);
+    const delFromProfile = deleteDoc(profileDoc);
     return Promise.all([delRequest, delFromProfile]);
+
+    // const teams = { ...teamMember.teams };
+    // delete teams[teamId];
+    // const delRequest = db.collection(`teams/${ teamId }/requests`).doc(teamMember.uid).delete();
+    // const delFromProfile = db.collection(`profiles/${ teamMember.uid || "" }/teams/`).doc(teamId).delete();
+    // return Promise.all([delRequest, delFromProfile]);
 }
 
 /** *************** TRASH DROPS *************** **/
@@ -1054,16 +1179,23 @@ export function dropTrash(trashDrop: TrashDrop): Promise<any> {
         }
     );
     
-    return db.collection("trashDrops").add(newDrop);
+    return addDoc(collection(firestore, "trashDrops"), newDrop);
+    // return db.collection("trashDrops").add(newDrop);
 }
 
 export function updateTrashDrop(trashDrop: TrashDrop): Promise<any> {
-    return db.collection("trashDrops").doc(trashDrop.id).set(deconstruct({
+    return setDoc(doc(firestore, "trashDrops", trashDrop.id), deconstruct({
         ...trashDrop,
         location: { ...trashDrop.location }
     }));
+
+    // return db.collection("trashDrops").doc(trashDrop.id).set(deconstruct({
+    //     ...trashDrop,
+    //     location: { ...trashDrop.location }
+    // }));
 }
 
 export function removeTrashDrop(trashDrop: TrashDrop): Promise<any> {
-    return db.collection("trashDrops").doc(trashDrop.id).delete();
+    return deleteDoc(doc(firestore, "trashDrops", trashDrop.id));
+    // return db.collection("trashDrops").doc(trashDrop.id).delete();
 }
