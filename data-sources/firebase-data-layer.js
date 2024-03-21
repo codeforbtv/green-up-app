@@ -46,6 +46,7 @@ const deconstruct = (obj: Object): Object => {
 
 const removeListener = (key: string) => {
     if (myListeners[key]) {
+        console.log("Removing Listener:", key)
         myListeners[key]();
         delete myListeners[key];
     }
@@ -55,6 +56,7 @@ const addListener = (key: string, listener: () => void) => {
     if (!key) {
         throw Error("Cannot add listener. Invalid listener key");
     }
+    console.log("Adding Listener:", key)
     removeListener(key);
     myListeners[key] = listener;
 };
@@ -164,7 +166,7 @@ const setupInvitedTeamMemberListener = (teamIds: Array<string>, dispatch: Dispat
         // TODO : Handle the error
     });
 
-    addListener(`teamMembers_${ teamId }_invitations}`, listener);
+    addListener(`teamMembers_${ teamId }_invitations`, listener);
     // const ref = db.collection(`teams/${ teamId }/invitations`);
 
     // const onSnapshot = (querySnapshot: Object) => {
