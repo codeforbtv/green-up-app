@@ -39,5 +39,8 @@ a pat on the back if you see them.
 * Nathan Edwards
 * Justin Chang
 * Charles Daoust
+* Tito Ortiz
+* Charles Davidson
+* Shariq Ali
 
 (I know we do not have the names of the original students who worked on this)
