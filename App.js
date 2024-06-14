@@ -21,7 +21,7 @@ if (!global.atob) {
 window.addEventListener = x => x;
 
 // Stop annoying Android users with useless warnings.
-LogBox.ignoreLogs(["Setting a timer for a long period of time", "getNode", "old version of react-navigation library"]);
+// LogBox.ignoreLogs(["Setting a timer for a long period of time", "getNode", "old version of react-navigation library"]);
 // LogBox.ignoreAllLogs();
 
 type PropsType = { skipLoadingScreen: boolean };
@@ -76,14 +76,14 @@ const App = ({ skipLoadingScreen }: PropsType): React$Element<any> => {
     const load = (
         <AppLoading onError={handleLoadingError} onFinish={handleFinishLoading} startAsync={loadResourcesAsync} />
     );
-
+    
     const mainApp = (
         <AppState>
-            <Session>
-                <NavigationContainer>
+            <NavigationContainer>
+                <Session>
                     <MainTabNavigator />
-                </NavigationContainer>
-            </Session>
+                </Session>
+            </NavigationContainer>
         </AppState>
     );
 

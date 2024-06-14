@@ -1,6 +1,6 @@
 // @flow
 import React, { Fragment } from "react";
-import MapView from "react-native-maps";
+import MapView, { Marker } from 'react-native-maps';
 import * as R from "ramda";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -102,7 +102,7 @@ const TrashMap = (
     const collectedTrashMarkers = (collectedTrashToggle ? drops : [])
         .filter((d: TrashDrop): boolean => d.wasCollected === true)
         .map((d: TrashDrop): React$Element<any> => (
-            <MapView.Marker
+            <Marker
                 key={ d.id }
                 // image={collectedTrashIcon}
                 pinColor={ "turquoise" }
@@ -114,7 +114,7 @@ const TrashMap = (
     const myTrashMarkers = (drops || [])
         .filter((d: TrashDrop): boolean => Boolean(myTrashToggle && !d.wasCollected && d.createdBy && d.createdBy.uid === currentUser.uid))
         .map((d: TrashDrop): React$Element<any> => (
-            <MapView.Marker
+            <Marker
                 key={ d.id }
                 // image={myUncollectedTrashIcon}
                 pinColor={ "yellow" }
@@ -126,13 +126,13 @@ const TrashMap = (
                     description={ `${ d.bagCount || "0" } bag(s)${ (d.tags || []).length > 0 ? " & other trash" : "" }` }
                     onPress={() => navigation.navigate("TrashTaggerModal", {existingDrop: d})}
                     />
-            </MapView.Marker>
+            </Marker>
         ));
 
     const uncollectedTrashMakers = (uncollectedTrashToggle ? drops : [])
         .filter((d: TrashDrop): boolean => Boolean(!d.wasCollected && d.createdBy && d.createdBy.uid !== currentUser.uid))
         .map((d: TrashDrop): React$Element<any> => (
-            <MapView.Marker
+            <Marker
                 key={ d.id }
                 // image={uncollectedTrashIcon}
                 pinColor={ "red" }
@@ -144,7 +144,7 @@ const TrashMap = (
 
     const collectionSiteMarkers = offsetLocations((supplyPickupToggle ? distributionSites : []), trashDropOffToggle ? collectionSites : [])
         .map((d: Object, i: number): React$Element<any> => (
-            <MapView.Marker
+            <Marker
                 key={ `dropOffLocation${ i }.map((d, i) => (` }
                 // image={trashDropOffLocationIcon}
                 pinColor={ "blue" }
@@ -154,12 +154,12 @@ const TrashMap = (
                     title="Drop Off Location"
                     description={ `${ d.name }, ${ Address.toString(d.address) }` }
                 />
-            </MapView.Marker>
+            </Marker>
         ));
 
     const distributionSiteMarkers = (supplyPickupToggle ? distributionSites : [])
         .map((d: Object, i: number): React$Element<any> => (
-            <MapView.Marker
+            <Marker
                 key={ `supplyPickup${ i }` }
                 // image={supplyPickupLocationIcon}
                 pinColor={ "green" }
@@ -169,12 +169,12 @@ const TrashMap = (
                     title="Supply Pickup Location"
                     description={ `${ d.name }, ${ Address.toString(d.address) }` }
                 />
-            </MapView.Marker>
+            </Marker>
         ));
 
     const cleanAreaMarkers = (cleanAreasToggle ? cleanAreas : [])
         .map((d: Object, i: number): React$Element<any> => (
-            <MapView.Marker
+              <Marker
                 key={ `cleanArea${ i }` }
                 pinColor={ "orange" }
                 coordinate={ d.coordinates }
@@ -183,7 +183,7 @@ const TrashMap = (
                     title={ `${ d.title }` }
                     description={ `${ d.description }` }
                 />
-            </MapView.Marker>
+            </Marker>
         ));
 
     const allMarkers = distributionSiteMarkers
