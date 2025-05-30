@@ -42,5 +42,7 @@ a pat on the back if you see them.
 * Tito Ortiz
 * Charles Davidson
 * Shariq Ali
+* Stuart Hunt
+* Eugene Yum
 
 (I know we do not have the names of the original students who worked on this)
