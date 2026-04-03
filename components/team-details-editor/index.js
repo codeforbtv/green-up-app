@@ -163,7 +163,7 @@ const mapStateToProps = (state: Object): Object => {
     const otherCleanAreas = R.compose(
         R.flatten,
         R.map((entry: [string, TeamType]): Array<Object> => mapToPinData(entry[1].locations, entry[1].name)),
-        R.filter((entry: [string, TeamType]): boolean => (entry[0] !== selectedTeam.id)),
+        R.filter((entry: [string, TeamType]): boolean => (entry[0] !== (selectedTeam || {}).id)),
         Object.entries
     )(state.teams.teams);
 

@@ -145,7 +145,7 @@ export const saveTeam = (team: Object): ThunkType => {
     function thunk(dispatch: Dispatch<ActionType>) {
         firebaseDataLayer.saveTeam(team)
             .then((savedTeam: TeamType) => {
-                dispatch({ type: types.SAVE_TEAM_SUCCESS, savedTeam });
+                dispatch({ type: types.SAVE_TEAM_SUCCESS, data: team });
             })
             .catch((error: Error) => {
                 dispatch({ type: types.SAVE_TEAM_FAIL, error });
@@ -158,7 +158,11 @@ export const saveTeam = (team: Object): ThunkType => {
 
 export const createTeam = (team: Object, user: UserType): ThunkType => {
     function thunk(dispatch: Dispatch<ActionType>) {
-        firebaseDataLayer.createTeam(Team.create(team), TeamMember.create(user), dispatch);
+        const newTeam = Team.create(team);
+        firebaseDataLayer.createTeam(newTeam, TeamMember.create(user), dispatch)
+            .then((teamId: string) => {
+                dispatch({ type: types.CREATE_TEAM_SUCCESS, data: { ...newTeam, id: teamId } });
+            });
     }
 
     thunk.interceptOnOffline = true;
@@ -170,7 +174,7 @@ export const deleteTeam = (teamId: string): ThunkType => {
     function thunk(dispatch: Dispatch<ActionType>) {
         firebaseDataLayer.deleteTeam(teamId)
             .then((data: any) => {
-                dispatch({ type: types.DELETE_TEAM_SUCCESS, data });
+                dispatch({ type: types.DELETE_TEAM_SUCCESS, data: teamId });
             })
             .catch((error: Error) => {
                 dispatch({ type: types.DELETE_TEAM_FAIL, error });
