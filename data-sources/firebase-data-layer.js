@@ -946,7 +946,7 @@ export async function createTeam(team: Object = {}, user: ?Object = {}, dispatch
 
     // setupTeamMemberListener([docRef.id], dispatch);
     // setupTeamMessageListener([docRef.id], dispatch);
-
+    return docRef.id;
 }
 
 export function saveTeam(team: TeamType): Promise<any> {
@@ -984,7 +984,15 @@ export function deleteTeam(teamId: string): Promise<any> {
     // return new Promise(function(r) {
     //     setTimeout(() => { r('blah'); }, 2000);
     //   });
-    return deleteDoc(doc(firestore, "teams", teamId));
+    return deleteDoc(doc(firestore, "teams", teamId)).then(() => {
+        // Clean up all listeners for this team
+        removeListener(`team_${teamId}_messages`);
+        removeListener(`team_${teamId}_members`);
+        removeListener(`team_${teamId}_requests`);
+        removeListener(`teamMembers_${teamId}_invitations`);
+    }).catch((error) => {
+        console.log("error: " + error);
+    });
     // return db.collection("teams").doc(teamId).delete();
 }
 

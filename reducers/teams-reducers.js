@@ -42,7 +42,35 @@ export const teamsReducers = (state: Object = initialState.teams, action: Action
                 ...state,
                 teams: action.data
             };
-
+        case types.CREATE_TEAM_SUCCESS : {
+            const newTeam = action.data;
+            return {
+                ...state,
+                teams: { ...state.teams, [newTeam.id]: newTeam }
+            };
+        }
+        case types.SAVE_TEAM_SUCCESS : {
+            const savedTeam = action.data;
+            return {
+                ...state,
+                teams: { ...state.teams, [savedTeam.id]: { ...state.teams[savedTeam.id], ...savedTeam } },
+                selectedTeam: state.selectedTeam && state.selectedTeam.id === savedTeam.id
+                    ? { ...state.selectedTeam, ...savedTeam }
+                    : state.selectedTeam
+            };
+        }
+        case types.DELETE_TEAM_SUCCESS : {
+            const deletedTeamId = action.data;
+            const remainingTeams = { ...state.teams };
+            delete remainingTeams[deletedTeamId];
+            return {
+                ...state,
+                teams: remainingTeams,
+                selectedTeam: state.selectedTeam && state.selectedTeam.id === deletedTeamId
+                    ? null
+                    : state.selectedTeam
+            };
+        }
         case types.SET_SELECTED_TEAM_VALUE: {
             const newSelectedTeam = Object.assign({}, state.selectedTeam);
             newSelectedTeam[(action.data || {}).key] = (action.data || {}).value;
