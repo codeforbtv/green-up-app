@@ -58,8 +58,8 @@ export const inviteContacts = (team: Object, currentUser: Object, teamMembers: [
             return firebaseDataLayer.inviteTeamMember(invitation);
         });
         Promise.all(invites)
-            .then((data: Array<any>) => {
-                dispatch({ type: types.SEND_INVITATIONS_SUCCESS, data });
+            .then(() => {
+                dispatch({ type: types.SEND_INVITATIONS_SUCCESS, data: { teamId: team.id, invitedMembers: teamMembers } });
             })
             .catch(error => {
                 dispatch({ type: types.SEND_INVITATIONS_FAIL, error });

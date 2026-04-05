@@ -58,6 +58,30 @@ export const teamsReducers = (state: Object = initialState.teams, action: Action
                 teamMembersLoaded: true
             };
         }
+        case types.SEND_INVITATIONS_SUCCESS : {
+            const teamId = (action.data || {}).teamId;
+            const invitedMembers = (action.data || {}).invitedMembers || [];
+            if (!teamId) return state;
+
+            const newMembers = {};
+            for (const member of invitedMembers) {
+                const key = member.uid || member.email;
+                if (key) {
+                    newMembers[key] = member;
+                }
+            }
+
+            return {
+                ...state,
+                teamMembers: {
+                    ...state.teamMembers,
+                    [teamId]: {
+                        ...(state.teamMembers[teamId] || {}),
+                        ...newMembers
+                    }
+                }
+            };
+        }
         case types.TEAM_REQUEST_FETCH_SUCCESS : {
             return {
                 ...state,
