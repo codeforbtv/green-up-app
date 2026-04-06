@@ -161,9 +161,6 @@ const setupInvitedTeamMemberListener = (teamIds: Array<string>, dispatch: Dispat
     const teamRef = doc(firestore, `teams/${teamId}`)
     const ref = collection(teamRef, `invitations`);
 
-    const listener = onSnapshot(ref, { next: onSnapshotz, error: onError })
-
-
     const onSnapshotz = (querySnapshot: Object) => {
         const data = [];
         querySnapshot.forEach((_doc: Object) => {
@@ -178,6 +175,7 @@ const setupInvitedTeamMemberListener = (teamIds: Array<string>, dispatch: Dispat
         // TODO : Handle the error
     });
 
+    const listener = onSnapshot(ref, onSnapshotz, onError);
     addListener(`teamMembers_${ teamId }_invitations`, listener);
     // const ref = db.collection(`teams/${ teamId }/invitations`);
 
