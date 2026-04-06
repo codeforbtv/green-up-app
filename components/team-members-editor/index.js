@@ -9,7 +9,7 @@ import {
     View,
     FlatList
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { connect } from "react-redux";
 import MemberIcon from "../../components/member-icon";
 import { defaultStyles } from "../../styles/default-styles";
@@ -186,7 +186,9 @@ const TeamMembersEditor = ({ actions, team, members, requests, invitations }: Pr
                 onRequestClose={ (): string => ("this function is required. Who knows why?") }
                 transparent={ true }
                 visible={ isModalVisible }>
-                { modalContent }
+                <SafeAreaProvider>
+                    { modalContent }
+                </SafeAreaProvider>
             </Modal>
         </View>
     );
