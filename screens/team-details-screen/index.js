@@ -444,7 +444,13 @@ const mapStateToProps = (state: Object): Object => {
         .values((state.towns.townData || {}))
         .find((_town: Object): boolean => (_town.name || "").toLowerCase() === selectedTownName);
     const selectedTeam = state.teams.selectedTeam || {};
-    const teamMembers = state.teams.teamMembers[selectedTeam.id] || {};
+    
+    // Combine members, requests, and invitations into one block for the list
+    const members = state.teams.teamMembers[selectedTeam.id] || {};
+    const requests = (state.teams.teamRequests || {})[selectedTeam.id] || {};
+    const teamInvitations = (state.teams.invitations || {})[selectedTeam.id] || {};
+    const teamMembers = { ...requests, ...teamInvitations, ...members };
+    
     const currentUser = User.create({ ...state.login.user, ...state.profile });
     const invitations = state.teams.myInvitations || {};
     return ({
