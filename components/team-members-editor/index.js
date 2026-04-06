@@ -171,22 +171,24 @@ const TeamMembersEditor = ({ actions, team, members, requests, invitations }: Pr
 
 
     return (
-        <SafeAreaView style={ styles.frame }>
-            <ButtonBar buttonConfigs={ headerButtons }/>
-            <View style={ {
-                flex: 1,
-                backgroundColor: constants.colorBackgroundLight
-            } }>
-                <FlatList data={memberRowData} renderItem={ ({item}) => (<MemberItem item={item} />)}  />
-            </View>
+        <View style={ { flex: 1 } }>
+            <SafeAreaView style={ { backgroundColor: constants.colorBackgroundDark, flex: 1 } }>
+                <ButtonBar buttonConfigs={ headerButtons }/>
+                <View style={ {
+                    flex: 1,
+                    backgroundColor: constants.colorBackgroundLight
+                } }>
+                    <FlatList data={memberRowData} renderItem={ ({item}) => (<MemberItem item={item} />)}  />
+                </View>
+            </SafeAreaView>
             <Modal
                 animationType={ "slide" }
                 onRequestClose={ (): string => ("this function is required. Who knows why?") }
-                transparent={ false }
+                transparent={ true }
                 visible={ isModalVisible }>
                 { modalContent }
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 };
 
