@@ -44,5 +44,7 @@ a pat on the back if you see them.
 * Shariq Ali
 * Stuart Hunt
 * Eugene Yum
+* David Smith (donated Android phone for testing)
+* Shariq Ali
 
 (I know we do not have the names of the original students who worked on this)
