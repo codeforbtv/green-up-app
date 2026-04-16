@@ -134,7 +134,7 @@ const MessageSummariesScreen = ({ actions, currentUser, messages, navigation, us
                 };
             case messageTypes.REQUEST_TO_JOIN :
                 return () => {
-                    const membershipId = ((message.sender || {}).email || {}).uid || "";
+                    const membershipId = (message.sender || {}).uid || "";
                     const teamId = message.teamId;
                     actions.readMessage(message, userId);
                     navigation.navigate("TeamMemberDetails", { teamId, membershipId });
@@ -217,22 +217,22 @@ const MessageSummariesScreen = ({ actions, currentUser, messages, navigation, us
                                 { "To send messages, join or create a team." }
                             </Text>
                         </View>
-                        <View styleName="horizontal" style={ { marginTop: 30 } }>
-                            <Button
+                        <View style={ { flexDirection: "row", marginTop: 30 } }>
+                            <TouchableOpacity
                                 onPress={ () => {
                                     navigation.navigate("FindTeam");
                                 } }
-                                styleName="confirmation">
-                                <Text>JOIN A TEAM</Text>
-                            </Button>
+                                style={ { flex: 1, backgroundColor: "#55683A", padding: 12, marginRight: 5, alignItems: "center", borderRadius: 4 } }>
+                                <Text style={ { color: "white", fontWeight: "bold", fontFamily: "Rubik-Regular" } }>JOIN A TEAM</Text>
+                            </TouchableOpacity>
 
-                            <Button
+                            <TouchableOpacity
                                 onPress={ () => {
                                     navigation.navigate("NewTeam");
                                 } }
-                                styleName="confirmation secondary">
-                                <Text>CREATE A TEAM</Text>
-                            </Button>
+                                style={ { flex: 1, backgroundColor: "#778F4C", padding: 12, marginLeft: 5, alignItems: "center", borderRadius: 4 } }>
+                                <Text style={ { color: "white", fontWeight: "bold", fontFamily: "Rubik-Regular" } }>CREATE A TEAM</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 )
