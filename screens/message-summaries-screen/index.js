@@ -18,6 +18,7 @@ import * as R from "ramda";
 import * as constants from "../../styles/constants";
 import { SimpleLineIcons } from "@expo/vector-icons";
 import ButtonBar from "../../components/button-bar";
+import { PrimaryButton, SecondaryButton } from "@/components/button";
 import { FlatList } from "react-native";
 import colors from "@/constants/colors";
 
@@ -217,22 +218,20 @@ const MessageSummariesScreen = ({ actions, currentUser, messages, navigation, us
                                 { "To send messages, join or create a team." }
                             </Text>
                         </View>
-                        <View styleName="horizontal" style={ { marginTop: 30 } }>
-                            <Button
+                        <View style={ { flexDirection: "row", marginTop: 30 } }>
+                            <PrimaryButton
                                 onPress={ () => {
                                     navigation.navigate("FindTeam");
-                                } }
-                                styleName="confirmation">
-                                <Text>JOIN A TEAM</Text>
-                            </Button>
+                                } }>
+                                <Text style={ { color: "white" } }>JOIN A TEAM</Text>
+                            </PrimaryButton>
 
-                            <Button
+                            <SecondaryButton
                                 onPress={ () => {
                                     navigation.navigate("NewTeam");
-                                } }
-                                styleName="confirmation secondary">
-                                <Text>CREATE A TEAM</Text>
-                            </Button>
+                                } }>
+                                <Text style={ { color: "white" } }>CREATE A TEAM</Text>
+                            </SecondaryButton>
                         </View>
                     </View>
                 )
