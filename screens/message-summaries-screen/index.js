@@ -220,13 +220,15 @@ const MessageSummariesScreen = ({ actions, currentUser, messages, navigation, us
                         </View>
                         <View style={ { flexDirection: "row", marginTop: 30 } }>
                             <PrimaryButton
+                                style={ { width: "50%" } }
                                 onPress={ () => {
                                     navigation.navigate("FindTeam");
                                 } }>
-                                <Text style={ { color: "white" } }>JOIN A TEAM</Text>
+                                <Text style={ { color: "#555" } }>JOIN A TEAM</Text>
                             </PrimaryButton>
 
                             <SecondaryButton
+                                style={ { width: "50%" } }
                                 onPress={ () => {
                                     navigation.navigate("NewTeam");
                                 } }>
